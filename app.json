@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "TrevMobileExpo",
+    "slug": "TrevMobileExpo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "scheme": "trevmobile",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "metamask",
+          "trust",
+          "safe",
+          "rainbow",
+          "uniswap"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.trevmobile.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "trevmobile",
+              "host": "*"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "permissions": []
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "@reown/appkit-wagmi-react-native",
+          "@walletconnect/react-native-compat",
+          "react-native-vector-icons",
+          "wagmi",
+          "viem"
+        ],
+        "listUnknownPackages": false
+      }
+    },
+    "plugins": [
+      "expo-barcode-scanner"
+    ]
+  }
+}
