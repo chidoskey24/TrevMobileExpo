@@ -22,7 +22,7 @@ export default function TransactionItem({
   const theme = useTheme()
   const isDeposit = type === 'deposit'
   const iconName  = isDeposit ? 'arrow-down-left' : 'arrow-up-right'
-  const amountColor = isDeposit ? theme.colors.primary : '#D60000'
+  const amountColor = isDeposit ? '#0066FF' : '#D60000'
 
   // Format with commas and two decimal places
   const formatted = new Intl.NumberFormat(undefined, {
@@ -49,7 +49,10 @@ export default function TransactionItem({
         </Text>
       </View>
 
-      <Text variant="bodyMedium" style={[styles.amount, { color: amountColor }]}>
+      <Text
+        variant="bodyMedium"
+        style={[styles.amount, { color: amountColor }]}
+      >
         {isDeposit ? '+' : '-'}
         {currency}
         {formatted}
@@ -63,25 +66,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 24,           // ← match the card’s horizontal padding
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#EEE',
   },
   icon: {
-    marginRight: 16,
+    marginRight: 24,                 // ← same gutter as the row padding
   },
   textBlock: {
     flex: 1,
   },
   title: {
-    // variant already gives you the correct font, this is only for override
     marginBottom: 2,
   },
   subtitle: {
     color: '#666',
   },
   amount: {
+    marginLeft: 'auto',              // ← push to right edge
     textAlign: 'right',
-    minWidth: 80,
+    width:  80,                      // ← fixed width for consistent alignment
   },
 })
