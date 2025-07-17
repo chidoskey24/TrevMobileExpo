@@ -47,7 +47,7 @@ export default function DashboardScreen() {
             <Text style={styles.actionLabel}>Deposit</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionBtn, styles.rightBtn]} onPress={onWithdraw}>
+        <TouchableOpacity style={[styles.actionBtn, styles.rightBtn]} onPress={() => navigation.navigate('Withdraw')}>
             <Text style={styles.actionLabel}>Withdraw</Text>
         </TouchableOpacity>
       </View>

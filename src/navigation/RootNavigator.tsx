@@ -13,6 +13,7 @@ import ScanScreen         from '../screens/ScanScreen';
 import ResultScreen       from '../screens/ResultScreen';
 import SettingsScreen     from '../screens/SettingsScreen';
 import DepositScreen      from '../screens/DepositScreen';
+import WithdrawScreen     from '../screens/WithdrawScreen';
 
 /* ---------------- auth flow params ---------------- */
 export type AuthStackParamList = {
@@ -29,6 +30,7 @@ export type AppStackParamList = {
   Result    : { data: string };
   Settings  : undefined;
   Deposit   : undefined;
+  Withdraw  : undefined;
 };
 
 /* merge for typing */
@@ -65,6 +67,7 @@ function AppNavigator() {
       <AppStack.Screen name="Result"    component={ResultScreen}  />
       <AppStack.Screen name="Settings"  component={SettingsScreen}/>
       <AppStack.Screen name="Deposit"   component={DepositScreen}  />
+      <AppStack.Screen name="Withdraw"  component={WithdrawScreen} />
     </AppStack.Navigator>
   );
 }
