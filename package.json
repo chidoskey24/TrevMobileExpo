@@ -24,6 +24,7 @@
     "expo-application": "^6.1.5",
     "expo-barcode-scanner": "^13.0.1",
     "expo-camera": "~16.1.10",
+    "expo-clipboard": "~7.1.5",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
     "react-native": "0.79.5",

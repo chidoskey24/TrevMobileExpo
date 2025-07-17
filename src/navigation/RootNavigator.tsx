@@ -12,6 +12,7 @@ import BottomTabs         from './BottomTabs';
 import ScanScreen         from '../screens/ScanScreen';
 import ResultScreen       from '../screens/ResultScreen';
 import SettingsScreen     from '../screens/SettingsScreen';
+import DepositScreen      from '../screens/DepositScreen';
 
 /* ---------------- auth flow params ---------------- */
 export type AuthStackParamList = {
@@ -27,6 +28,7 @@ export type AppStackParamList = {
   Scan      : undefined;
   Result    : { data: string };
   Settings  : undefined;
+  Deposit   : undefined;
 };
 
 /* merge for typing */
@@ -62,6 +64,7 @@ function AppNavigator() {
       <AppStack.Screen name="Scan"      component={ScanScreen}    />
       <AppStack.Screen name="Result"    component={ResultScreen}  />
       <AppStack.Screen name="Settings"  component={SettingsScreen}/>
+      <AppStack.Screen name="Deposit"   component={DepositScreen}  />
     </AppStack.Navigator>
   );
 }

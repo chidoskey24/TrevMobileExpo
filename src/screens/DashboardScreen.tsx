@@ -3,8 +3,13 @@ import React from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HeaderCard from '../components/HeaderCard';
 import TransactionItem from '../components/TransactionItem';
+import { useNavigation } from '@react-navigation/native';
+import type { RootStackParamList } from '../navigation/RootNavigator';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export default function DashboardScreen() {
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
 
     const onDeposit  = () => console.log('TODO: deposit');
     const onWithdraw = () => console.log('TODO: withdraw');
@@ -38,7 +43,7 @@ export default function DashboardScreen() {
       />
 
       <View style={styles.buttonRow}>
-        <TouchableOpacity style={[styles.actionBtn, styles.leftBtn]} onPress={onDeposit}>
+        <TouchableOpacity style={[styles.actionBtn, styles.leftBtn]} onPress={() => navigation.navigate('Deposit')}>
             <Text style={styles.actionLabel}>Deposit</Text>
         </TouchableOpacity>
 
