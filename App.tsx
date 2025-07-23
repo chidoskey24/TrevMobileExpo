@@ -14,7 +14,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 
 import { WagmiProvider } from 'wagmi';
-import { mainnet } from '@wagmi/core/chains';
+import { mainnet, polygonAmoy } from '@wagmi/core/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   createAppKit,
@@ -36,14 +36,15 @@ const metadata = {
     universal: 'https://trevmobile.com',
   },
 };
-const chains = [mainnet] as const;
+// Use Polygon PoS Amoy testnet only
+const chains = [polygonAmoy] as const;
 const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
 
 // must be called at top level (before your component renders)
 createAppKit({
   projectId,
   wagmiConfig,
-  defaultChain: mainnet,
+  defaultChain: polygonAmoy,
 });
 
 const queryClient = new QueryClient();

@@ -1,10 +1,12 @@
 // src/screens/ScanScreen.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import { CameraView, Camera, BarcodeScanningResult, BarcodeType } from 'expo-camera';
+import { CameraView, Camera } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../navigation/RootNavigator';
+import DepositContractAbi from '../../abi/DepositContract.json';
+import { useWriteContract } from 'wagmi';
 
 type Nav = NativeStackNavigationProp<AppStackParamList, 'Scan'>;
 
@@ -12,6 +14,11 @@ export default function ScanScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<any>>();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
+  const [scanData, setScanData] = useState<{
+    contract: string;
+    recipient: string;
+    amt: bigint;
+  } | null>(null);
 
   // 1️⃣ Ask for camera permission on mount
   useEffect(() => {
@@ -21,13 +28,56 @@ export default function ScanScreen() {
     })();
   }, []);
 
-  // 2️⃣ Handler fires when any code (1D, QR, etc.) is scanned
-  const handleBarCodeScanned = (result: BarcodeScanningResult) => {
-    setScanned(true);
-    navigation.navigate('Result', { data: result.data });
+  // 2️⃣ Get the writeContract function from wagmi
+  const { writeContractAsync } = useWriteContract();
+
+  // 3️⃣ Effect to send transaction when scanData changes
+  useEffect(() => {
+    if (scanData && writeContractAsync) {
+      (async () => {
+        try {
+          setScanned(true);
+          const txHash = await writeContractAsync({
+            address: scanData.contract as `0x${string}`,
+            abi: DepositContractAbi.abi,
+            functionName: 'deposit',
+            args: [scanData.recipient, scanData.amt],
+            value: scanData.amt,
+            chainId: 80002,
+          });
+          Alert.alert('Transaction sent', typeof txHash === 'string' ? txHash : JSON.stringify(txHash));
+          navigation.navigate('Dashboard');
+        } catch (err: any) {
+          Alert.alert('Transaction error', err?.message || 'Unknown error');
+          navigation.navigate('Dashboard');
+        } finally {
+          setScanned(false);
+          setScanData(null);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanData]);
+
+  // 4️⃣ Handler fires when any code (1D, QR, etc.) is scanned
+  const handleBarCodeScanned = ({ data }: { data: string }) => {
+    try {
+      const url = new URL(data);
+      const contract = url.searchParams.get('contract');
+      const fnSig = url.searchParams.get('fn'); // must be deposit(address,uint256)
+      const recipient = url.searchParams.get('to');
+      const amtStr = url.searchParams.get('amt');
+      if (!contract || !fnSig || !recipient || !amtStr) throw new Error('Missing params');
+      if (fnSig !== 'deposit(address,uint256)') throw new Error('Invalid function');
+      const amt = BigInt(amtStr);
+      setScanData({ contract, recipient, amt });
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Scan error', 'Could not parse QR code');
+    }
   };
 
-  // 3️⃣ Render loading / error states
+  // 5️⃣ Render loading / error states
   if (hasPermission === null) {
     return (
       <View style={styles.center}>
@@ -43,7 +93,7 @@ export default function ScanScreen() {
     );
   }
 
-  // 4️⃣ Render the camera preview full-screen
+  // 6️⃣ Render the camera preview full-screen
   return (
     <CameraView
       style={StyleSheet.absoluteFillObject}

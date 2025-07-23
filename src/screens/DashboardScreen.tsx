@@ -9,8 +9,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 export default function DashboardScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-
     const onDeposit  = () => console.log('TODO: deposit');
     const onWithdraw = () => console.log('TODO: withdraw');
 

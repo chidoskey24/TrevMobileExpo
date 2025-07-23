@@ -1,61 +1,32 @@
-// src/screens/DepositScreen.tsx
-import React, { useState } from 'react'
-import { View, StyleSheet, Image, Pressable } from 'react-native'
-import { Text, Snackbar } from 'react-native-paper'
-import * as Clipboard from 'expo-clipboard'
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 
-export default function DepositScreen() {
-  const [snackbarVisible, setSnackbarVisible] = useState(false)
+const CONTRACT_URI = 
+  'ethereum:0x4a4258641b0f1c456CFEE6a16d04678d4e993AC7@80002/deposit()';
 
-  // replace this with your real address or pass it in
-  const walletAddress = '0xabd0b6BFe7Fb5c7310288dF0aD2d71356cf007ff'  
-
-  const copyToClipboard = async () => {
-    await Clipboard.setStringAsync(walletAddress)
-    setSnackbarVisible(true)
-  }
-
+export default function DepositRequestScreen() {
   return (
     <View style={styles.container}>
-      {/* replace with your QR image */}
-      <Image
-        source={require('../../assets/qr-code.png')}
-        style={styles.qr}
-        resizeMode="contain"
+      <Text style={styles.header}>Scan to Deposit</Text>
+      <QRCode
+        value={CONTRACT_URI}
+        size={250}
       />
-
-      <Pressable onPress={copyToClipboard}>
-        <Text style={styles.address}>{walletAddress}</Text>
-      </Pressable>
-
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={1500}
-      >
-        Copied to clipboard!
-      </Snackbar>
+      <Text style={styles.instruction}>
+        Point your wallet’s QR scanner here
+      </Text>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#FFF',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
-  qr: {
-    width: 200,
-    height: 200,
-    marginBottom: 32,
-  },
-  address: {
-    fontSize: 16,
-    color: '#000',
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-  },
-})
+  header: { fontSize: 20, marginBottom: 20 },
+  instruction: { marginTop: 20, color: '#666' },
+});
