@@ -6,38 +6,55 @@ import TransactionItem from '../components/TransactionItem';
 import { useNavigation } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAccount, useBalance } from 'wagmi';
+import { useQuery } from '@tanstack/react-query';
+import { polygonAmoy } from '@wagmi/core/chains';
+import { useTxStore } from '../store/txStore';
 
 export default function DashboardScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-    const onDeposit  = () => console.log('TODO: deposit');
-    const onWithdraw = () => console.log('TODO: withdraw');
 
-    const txData = [
-        {
-            id: '1',
-            type: 'withdraw',          // 👈 determines icon + colour
-            title: 'Sent to wallet',
-            subtitle: '0.75 POL',
-            amount: -480,
-            currency: '₦', // optional, defaults to "₦"
-        },
-        {
-            id: '2',
-            type: 'deposit',
-            title: 'Received from DEX',
-            subtitle: '0.76 POL',
-            amount: 18000,
-            currency: '₦',
-        },
-    ] as const; // TypeScript type inference
+    /* ───────────────── wallet balance ───────────────── */
+    const { address } = useAccount();
+
+    const { data: balanceData } = useBalance({
+      address,
+      chainId: polygonAmoy.id,
+      query: {
+        enabled: !!address,
+        refetchInterval: 5_000,          // refresh every 5 s
+        refetchIntervalInBackground: true
+      },
+    });
+
+    // Fetch POL price (matic-network) in NGN from CoinGecko
+    const { data: priceData } = useQuery({
+      queryKey: ['polPriceNgn'],
+      queryFn: async () => {
+        const res = await fetch(
+          'https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=ngn'
+        );
+        return res.json() as Promise<Record<string, { ngn: number }>>;
+      },
+      staleTime: 60_000, // cache for 1 minute
+    });
+
+    const polPrice  = (priceData as any)?.['matic-network']?.ngn ?? 0;
+    const polBalance = Number(balanceData?.formatted ?? '0');
+    const nairaValue = polBalance * polPrice;
+
+    const isReady = !!address && !!balanceData && polPrice !== 0;
+
+    /* ───────────────── dummy tx data (static for now) ───────────── */
+    const txData = useTxStore(s=>s.txs);
 
 
   return (
     <SafeAreaView style={styles.root}>
       <HeaderCard
         userName="Trevor"
-        nairaBalance="₦5,164.00"
-        tokenBalance="19.34 POL"
+        nairaBalance={isReady ? `₦${nairaValue.toFixed(2)}` : '₦…'}
+        tokenBalance={isReady ? `${polBalance.toFixed(4)} POL` : '… POL'}
       />
 
       <View style={styles.buttonRow}>

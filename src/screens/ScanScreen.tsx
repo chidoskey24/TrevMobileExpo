@@ -7,6 +7,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../navigation/RootNavigator';
 import DepositContractAbi from '../../abi/DepositContract.json';
 import { useWriteContract } from 'wagmi';
+import { formatEther } from 'viem';
+import { useTxStore } from '../store/txStore';
 
 type Nav = NativeStackNavigationProp<AppStackParamList, 'Scan'>;
 
@@ -30,6 +32,7 @@ export default function ScanScreen() {
 
   // 2️⃣ Get the writeContract function from wagmi
   const { writeContractAsync } = useWriteContract();
+  const addTx = useTxStore(s=>s.addTx);
 
   // 3️⃣ Effect to send transaction when scanData changes
   useEffect(() => {
@@ -45,6 +48,25 @@ export default function ScanScreen() {
             value: scanData.amt,
             chainId: 80002,
           });
+          // Save tx locally for dashboard list
+          const amountEth = Number(formatEther(scanData.amt));
+          // fetch POL price in NGN
+          let naira = amountEth;
+          try {
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=ngn');
+            const priceJson = await res.json();
+            const polPrice = priceJson['matic-network']?.ngn ?? 0;
+            naira = amountEth * polPrice;
+          } catch {}
+          addTx({
+            id: txHash as string,
+            type: 'withdraw',
+            title: 'Paid',
+            subtitle: `${amountEth.toFixed(2)} POL`,
+            amount: -naira,
+            currency: '₦',
+          });
+
           Alert.alert('Transaction sent', typeof txHash === 'string' ? txHash : JSON.stringify(txHash));
           navigation.navigate('Dashboard');
         } catch (err: any) {
