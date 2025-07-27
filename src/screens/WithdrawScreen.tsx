@@ -10,6 +10,7 @@ import { TextInput, Button, Snackbar, Text } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RootStackParamList } from '../navigation/RootNavigator'
+import { useTxStore } from '../store/txStore'
 
 type NavProp = NativeStackNavigationProp<RootStackParamList, 'Withdraw'>
 
@@ -18,9 +19,31 @@ export default function WithdrawScreen() {
   const [address, setAddress] = useState('')
   const [amount, setAmount] = useState('')
   const [snackbarVisible, setSnackbarVisible] = useState(false)
+  const addTx = useTxStore(s => s.addTx)
 
-  const handleConfirm = () => {
-    // TODO: hook up your withdrawal logic here
+  const handleConfirm = async () => {
+    const polAmount = parseFloat(amount)
+    if (!address.trim() || !polAmount || polAmount <= 0) return
+
+    // simulate network delay + price fetch
+    let ngnValue = polAmount
+    try {
+      const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=matic-network&vs_currencies=ngn')
+      const priceJson = await res.json()
+      const polPrice = priceJson['matic-network']?.ngn ?? 0
+      ngnValue = polAmount * polPrice
+    } catch {}
+
+    // append tx to global store
+    addTx({
+      id: Date.now().toString(),
+      type: 'withdraw',
+      title: 'Withdrawal',
+      subtitle: `${polAmount.toFixed(2)} POL`,
+      amount: -ngnValue,
+      currency: '₦',
+    })
+
     setSnackbarVisible(true)
     setTimeout(() => {
       setSnackbarVisible(false)
