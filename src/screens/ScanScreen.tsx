@@ -1,6 +1,6 @@
 // src/screens/ScanScreen.tsx
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, Alert, Animated, Easing } from 'react-native';
 import { CameraView, Camera } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -30,7 +30,22 @@ export default function ScanScreen() {
     })();
   }, []);
 
-  // 2️⃣ Get the writeContract function from wagmi
+  // 2️⃣ Animated value for laser line
+  const scanLineAnim = useRef(new Animated.Value(0)).current;
+
+  // 3️⃣ Start laser line animation once at mount
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(scanLineAnim, {
+        toValue: 1,
+        duration: 2000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ).start();
+  }, [scanLineAnim]);
+
+  // 4️⃣ Get the writeContract function from wagmi
   const { writeContractAsync } = useWriteContract();
   const addTx = useTxStore(s=>s.addTx);
 
@@ -81,7 +96,13 @@ export default function ScanScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scanData]);
 
-  // 4️⃣ Handler fires when any code (1D, QR, etc.) is scanned
+  // 5️⃣ Interpolated translateY for laser line (within 250px frame)
+  const lineTranslateY = scanLineAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 248], // frame height (250) - laser height (2)
+  });
+
+  // 6️⃣ Handler fires when any code (1D, QR, etc.) is scanned
   const handleBarCodeScanned = ({ data }: { data: string }) => {
     try {
       const url = new URL(data);
@@ -99,7 +120,7 @@ export default function ScanScreen() {
     }
   };
 
-  // 5️⃣ Render loading / error states
+  // 7️⃣ Render loading / error states
   if (hasPermission === null) {
     return (
       <View style={styles.center}>
@@ -115,20 +136,51 @@ export default function ScanScreen() {
     );
   }
 
-  // 6️⃣ Render the camera preview full-screen
+  // 8️⃣ Render the camera preview full-screen with overlay
   return (
-    <CameraView
-      style={StyleSheet.absoluteFillObject}
-      facing="back"
-      onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
-      barcodeScannerSettings={{
-        barcodeTypes: ['qr', 'code128', 'code39', 'ean13', 'ean8', 'upc_a', 'upc_e'],
-      }}
-    />
+    <View style={styles.container}>
+      <CameraView
+        style={StyleSheet.absoluteFillObject}
+        facing="back"
+        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: ['qr', 'code128', 'code39', 'ean13', 'ean8', 'upc_a', 'upc_e'],
+        }}
+      />
+      {/* Overlay with scanning frame */}
+      <View style={styles.overlay} pointerEvents="none">
+        <View style={styles.frame}>
+          <Animated.View style={[styles.laserLine, { transform: [{ translateY: lineTranslateY }] }]} />
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  frame: {
+    width: 250,
+    height: 250,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  laserLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: 'red',
+  },
   center: {
     flex: 1,
     alignItems: 'center',

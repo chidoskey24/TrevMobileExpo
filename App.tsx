@@ -14,7 +14,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 
 import { WagmiProvider } from 'wagmi';
-import { mainnet, polygonAmoy } from '@wagmi/core/chains';
+import { polygonAmoy } from '@wagmi/core/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   createAppKit,
