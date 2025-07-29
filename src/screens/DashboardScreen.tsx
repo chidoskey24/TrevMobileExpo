@@ -2,6 +2,7 @@
 import React from 'react';
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import HeaderCard from '../components/HeaderCard';
+import { useAppStore } from '../store/useAppStore';
 import TransactionItem from '../components/TransactionItem';
 import { useNavigation } from '@react-navigation/native';
 import type { RootStackParamList } from '../navigation/RootNavigator';
@@ -13,6 +14,7 @@ import { useTxStore } from '../store/txStore';
 
 export default function DashboardScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const userName = useAppStore(s=>s.user?.name ?? 'Trevor');
 
     /* ───────────────── wallet balance ───────────────── */
     const { address } = useAccount();
@@ -52,7 +54,7 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.root}>
       <HeaderCard
-        userName="Trevor"
+        userName={userName}
         nairaBalance={isReady ? `₦${nairaValue.toFixed(2)}` : '₦…'}
         tokenBalance={isReady ? `${polBalance.toFixed(4)} POL` : '… POL'}
       />

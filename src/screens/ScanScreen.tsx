@@ -9,6 +9,9 @@ import DepositContractAbi from '../../abi/DepositContract.json';
 import { useWriteContract } from 'wagmi';
 import { formatEther } from 'viem';
 import { useTxStore } from '../store/txStore';
+import { parseEther } from 'viem';
+import { useWalletClient, usePublicClient } from 'wagmi';
+import { polygonAmoy } from 'viem/chains';
 
 type Nav = NativeStackNavigationProp<AppStackParamList, 'Scan'>;
 
@@ -49,20 +52,30 @@ export default function ScanScreen() {
   const { writeContractAsync } = useWriteContract();
   const addTx = useTxStore(s=>s.addTx);
 
+  // clients from wagmi (must be at top level, not inside useEffect)
+  const publicClient = usePublicClient({ chainId: polygonAmoy.id });
+  const { data: walletClient } = useWalletClient({ chainId: polygonAmoy.id });
+
   // 3️⃣ Effect to send transaction when scanData changes
   useEffect(() => {
-    if (scanData && writeContractAsync) {
+    if (scanData) {
       (async () => {
         try {
           setScanned(true);
-          const txHash = await writeContractAsync({
+          if (!publicClient || !walletClient) throw new Error('Wallet client not ready');
+
+          // 1⃣ simulate
+          const { request } = await publicClient.simulateContract({
+            account: await walletClient.getAddresses().then(a => a[0]),
             address: scanData.contract as `0x${string}`,
             abi: DepositContractAbi.abi,
             functionName: 'deposit',
             args: [scanData.recipient, scanData.amt],
             value: scanData.amt,
-            chainId: 80002,
           });
+
+          // 2⃣ send for real
+          const txHash = await walletClient.writeContract(request);
           // Save tx locally for dashboard list
           const amountEth = Number(formatEther(scanData.amt));
           // fetch POL price in NGN
@@ -84,8 +97,9 @@ export default function ScanScreen() {
 
           Alert.alert('Transaction sent', typeof txHash === 'string' ? txHash : JSON.stringify(txHash));
           navigation.navigate('Dashboard');
-        } catch (err: any) {
-          Alert.alert('Transaction error', err?.message || 'Unknown error');
+        } catch (err) {
+          console.error(err);
+          Alert.alert('Transaction error', (err as any)?.shortMessage ?? 'Unknown error');
           navigation.navigate('Dashboard');
         } finally {
           setScanned(false);
@@ -187,3 +201,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+function toWeiString(decimalStr: string): string {
+  // parseEther returns a bigint; convert to string for the URL
+  return parseEther(decimalStr).toString();
+}

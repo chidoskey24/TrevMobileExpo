@@ -1,8 +1,13 @@
 // src/components/HeaderCard.tsx
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Feather as BellIcon, FontAwesome as AvatarIcon } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { RootStackParamList } from '../navigation/RootNavigator';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTxStore } from '../store/txStore';
+import { useAppStore } from '../store/useAppStore';
 
 interface Props {
   userName:     string;
@@ -15,17 +20,30 @@ export default function HeaderCard({
   nairaBalance,
   tokenBalance,
 }: Props) {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const hasUnread = useTxStore(s=>s.hasUnread);
+  const avatarUri = useAppStore(s=>s.user?.avatarUri);
+
   return (
     <View style={styles.card}>
       {/* top row */}
       <View style={styles.row}>
-      <AvatarIcon name="user-circle-o" size={56} color="#FFF" />
+      {avatarUri ? (
+        <Image source={{ uri: avatarUri }} style={styles.avatar} />
+      ) : (
+        <AvatarIcon name="user-circle-o" size={56} color="#FFF" />
+      )}
         <View style={styles.gap}>
           <Text style={styles.hello}>Hello</Text>
           <Text style={styles.name}>{userName}</Text>
         </View>
         <View style={styles.flex} />
-        <BellIcon     name="bell"            size={26} color="#FFF" />
+        <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+          <View>
+            <BellIcon name="bell" size={26} color="#FFF" />
+            {hasUnread && <View style={styles.dot} />}
+          </View>
+        </TouchableOpacity>
       </View>
 
       {/* balance row */}
@@ -80,5 +98,19 @@ const styles = StyleSheet.create({
   },
   tokenFont: {
     fontSize: 23,
+  },
+  dot: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 5,
+    width: 10,
+    height: 10,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
 });

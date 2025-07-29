@@ -8,6 +8,7 @@ export type User = {
   name?:          string;
   email?:         string;
   walletAddress?: string;
+  avatarUri?:    string;
 };
 
 type AppState = {

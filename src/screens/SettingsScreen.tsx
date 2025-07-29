@@ -6,26 +6,29 @@ import { Text, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useAppStore } from '../store/useAppStore';             // for logout
 import {
   useAppKit,
-  useWalletInfo,
   useAppKitState,
 } from '@reown/appkit-wagmi-react-native';
+import { useAccount } from 'wagmi';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootNavigator';
 
 export default function SettingsScreen() {
   // AppKit hooks
   const { open, close }   = useAppKit();
-  const { walletInfo }    = useWalletInfo();
   const { open: isModalOpen } = useAppKitState();
+  const { address } = useAccount();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // Zustand logout
   const resetUser = useAppStore((s) => s.resetUser);
 
   // Derived flags
-  const account = walletInfo?.address as string | undefined;
-  const connected = Boolean(account);
+  const connected = Boolean(address);
 
   // Handlers
   const handleWalletPress = () => {
-    connected ? close() : open();
+    open(); // always open modal; inside modal user can disconnect if desired
   };
 
   const handleLogout = () => {
@@ -37,7 +40,7 @@ export default function SettingsScreen() {
       <Text style={styles.header}>Account</Text>
 
       {/* Profile row */}
-      <TouchableOpacity style={styles.row}>
+      <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Profile')}>
         <IconButton icon="account" size={20} />
         <View style={{ flex: 1 }}>
           <Text style={styles.rowTitle}>Profile</Text>
@@ -50,12 +53,10 @@ export default function SettingsScreen() {
         <IconButton icon="qrcode-scan" size={20} />
         <View style={{ flex: 1 }}>
           <Text style={styles.rowTitle}>
-            {connected ? 'Disconnect wallet' : 'Link wallet'}
+            {connected ? 'Wallet connected' : 'Link wallet'}
           </Text>
           <Text style={styles.rowSub}>
-            {connected
-              ? `${account!.slice(0, 6)}…${account!.slice(-4)}`
-              : 'MetaMask, Rainbow …'}
+            {connected ? `${address!.slice(0, 6)}…${address!.slice(-4)}` : 'MetaMask, Rainbow …'}
           </Text>
         </View>
         {isModalOpen && <ActivityIndicator />}
@@ -71,7 +72,7 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff', padding: 24, paddingTop: 70 },
-  header:    { fontSize: 18, fontWeight: '700', marginBottom: 12 },
+  header:    { fontSize: 20, fontWeight: '700', marginBottom: 12 },
 
   row: {
     flexDirection: 'row',
