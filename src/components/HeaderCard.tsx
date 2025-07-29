@@ -28,11 +28,13 @@ export default function HeaderCard({
     <View style={styles.card}>
       {/* top row */}
       <View style={styles.row}>
-      {avatarUri ? (
-        <Image source={{ uri: avatarUri }} style={styles.avatar} />
-      ) : (
-        <AvatarIcon name="user-circle-o" size={56} color="#FFF" />
-      )}
+        <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+          {avatarUri ? (
+            <Image source={{ uri: avatarUri }} style={styles.avatar} />
+          ) : (
+            <AvatarIcon name="user-circle-o" size={56} color="#FFF" />
+          )}
+        </TouchableOpacity>
         <View style={styles.gap}>
           <Text style={styles.hello}>Hello</Text>
           <Text style={styles.name}>{userName}</Text>
