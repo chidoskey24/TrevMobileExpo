@@ -27,7 +27,7 @@ export type AuthStackParamList = {
 
 /* ---------------- app flow params ---------------- */
 export type AppStackParamList = {
-  Dashboard : undefined;
+  Tabs      : undefined;   // hosts the bottom tab navigator
   Scan      : undefined;
   Result    : { data: string };
   Settings  : undefined;
@@ -63,10 +63,11 @@ function AuthNavigator() {
 function AppNavigator() {
   return (
     <AppStack.Navigator
-      initialRouteName="Dashboard"
+      initialRouteName="Tabs"
       screenOptions={{ headerShown: false }}
     >
-      <AppStack.Screen name="Dashboard" component={BottomTabs} />
+      {/* Avoid duplicating a route name that also exists inside the tab navigator */}
+      <AppStack.Screen name="Tabs" component={BottomTabs} />
       <AppStack.Screen name="Scan"      component={ScanScreen}    />
       <AppStack.Screen name="Result"    component={ResultScreen}  />
       <AppStack.Screen name="Settings"  component={SettingsScreen}/>

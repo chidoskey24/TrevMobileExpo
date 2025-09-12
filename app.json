@@ -47,21 +47,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "doctor": {
-      "reactNativeDirectoryCheck": {
-        "exclude": [
-          "@reown/appkit-wagmi-react-native",
-          "@walletconnect/react-native-compat",
-          "react-native-vector-icons",
-          "wagmi",
-          "viem"
-        ],
-        "listUnknownPackages": false
-      }
-    },
-    "plugins": [
-      "expo-barcode-scanner"
-    ]
+    "plugins": []
   }
 }
 

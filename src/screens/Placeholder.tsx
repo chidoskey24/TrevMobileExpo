@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-export default () => (
-  <View style={{ flex:1,alignItems:'center',justifyContent:'center' }}>
-    <Text>TODO</Text>
-  </View>
-);
+
+export default function Placeholder() {
+  // Invisible screen used to occupy the hidden "Scan" tab route.
+  // We navigate to the real Scan screen in the root stack.
+  return null;
+}

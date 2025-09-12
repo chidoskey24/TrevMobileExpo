@@ -39,7 +39,7 @@ export default function WithdrawScreen() {
       id: Date.now().toString(),
       type: 'withdraw',
       title: 'Withdrawal',
-      subtitle: `${polAmount.toFixed(2)} POL`,
+      subtitle: `${polAmount.toFixed(4)} POL`,
       amount: -ngnValue,
       currency: '₦',
     })

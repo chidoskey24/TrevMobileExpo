@@ -12,7 +12,13 @@ import Dummy           from '../screens/Placeholder';      // only for hiding th
 import SettingsScreen  from '../screens/SettingsScreen';
 import ScanScreen      from '../screens/ScanScreen';       // you can swap out Dummy for this if you want
 
-const Tab = createBottomTabNavigator<RootStackParamList>();
+type TabParamList = {
+  Dashboard: undefined;
+  ScanTab  : undefined; // hidden placeholder route inside tabs
+  Settings : undefined;
+};
+
+const Tab = createBottomTabNavigator<TabParamList>();
 
 export default function BottomTabs() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -28,9 +34,9 @@ export default function BottomTabs() {
           tabBarStyle: { height: 72, paddingBottom: 8 },
         }}
       >
-        {/* Dashboard (formerly “Home”) */}
+        {/* Dashboard tab */}
         <Tab.Screen
-          name="Dashboard"                          // ← matches your RootStackParamList
+          name="Dashboard"
           component={DashboardScreen}
           options={{
             tabBarIcon: ({ color }) => (
@@ -42,9 +48,9 @@ export default function BottomTabs() {
           }}
         />
 
-        {/* Scan (hidden, we still navigate to it via the FAB) */}
+        {/* Scan (hidden, we still navigate to stack 'Scan' via the FAB) */}
         <Tab.Screen
-          name="Scan"
+          name="ScanTab"
           component={Dummy}                         // or Swap in ScanScreen if you want
           options={{ tabBarButton: () => null }}
         />

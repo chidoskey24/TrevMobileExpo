@@ -1,7 +1,7 @@
 // App.tsx
 import 'react-native-gesture-handler';            // 🦶 react-navigation requirement
 import 'react-native-url-polyfill/auto';          // 🌐 URL polyfill for AppKit
-import './src/crypto-polyfill';                   // 🏝️ expo-crypto getRandomValues shim
+import './src/store/crypto-polyfill';             // 🏝️ expo-crypto getRandomValues shim
 import '@walletconnect/react-native-compat';      // 🔌 WalletConnect compat layer
 
 import { Buffer } from 'buffer';
@@ -10,6 +10,7 @@ global.Buffer = Buffer;
 global.process = process;
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper';
 import { LogBox } from 'react-native';
 import React from 'react';
@@ -63,6 +64,7 @@ if (!(global as any)._appkitInitialized) {
   createAppKit({
     projectId,
     wagmiConfig,
+    metadata,
     defaultChain: polygonAmoy,
   });
   (global as any)._appkitInitialized = true;
@@ -82,17 +84,19 @@ const paperTheme = {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <PaperProvider theme={paperTheme}>
-        <WagmiProvider config={wagmiConfig}>
-          <QueryClientProvider client={queryClient}>
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-            {/* AppKit modal */}
-            <AppKit />
-          </QueryClientProvider>
-        </WagmiProvider>
-      </PaperProvider>
+      <SafeAreaProvider>
+        <PaperProvider theme={paperTheme}>
+          <WagmiProvider config={wagmiConfig}>
+            <QueryClientProvider client={queryClient}>
+              <NavigationContainer>
+                <RootNavigator />
+              </NavigationContainer>
+              {/* AppKit modal */}
+              <AppKit />
+            </QueryClientProvider>
+          </WagmiProvider>
+        </PaperProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }

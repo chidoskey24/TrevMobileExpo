@@ -90,17 +90,17 @@ export default function ScanScreen() {
             id: txHash as string,
             type: 'withdraw',
             title: 'Paid',
-            subtitle: `${amountEth.toFixed(2)} POL`,
+            subtitle: `${amountEth.toFixed(4)} POL`,
             amount: -naira,
             currency: '₦',
           });
 
           Alert.alert('Transaction sent', typeof txHash === 'string' ? txHash : JSON.stringify(txHash));
-          navigation.navigate('Dashboard');
+          navigation.navigate('Tabs');
         } catch (err) {
           console.error(err);
           Alert.alert('Transaction error', (err as any)?.shortMessage ?? 'Unknown error');
-          navigation.navigate('Dashboard');
+          navigation.navigate('Tabs');
         } finally {
           setScanned(false);
           setScanData(null);
