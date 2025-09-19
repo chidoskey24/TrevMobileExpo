@@ -37,7 +37,7 @@ export default function SignInScreen() {
       name:  'John Doe',
       email: 'john.doe@example.com',
     });
-    navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
 
   const goToSignUp = () => navigation.navigate('SignUp');

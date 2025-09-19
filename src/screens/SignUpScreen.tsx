@@ -38,7 +38,7 @@ export default function SignUpScreen() {
       name:  name.trim(),
       email: email.trim(),
     });
-    navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
+    navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
   };
 
   return (
