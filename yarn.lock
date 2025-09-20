@@ -2921,6 +2921,11 @@ available-typed-arrays@^1.0.7:
   dependencies:
     possible-typed-array-names "^1.0.0"
 
+await-lock@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/await-lock/-/await-lock-2.2.2.tgz#a95a9b269bfd2f69d22b17a321686f551152bcef"
+  integrity sha512-aDczADvlvTGajTDjcjpJMqRkOF6Qdz3YbPZm/PyW6tKPkx2hlYBzxMhEywM/tU72HrVZjgl5VCdRuMlA7pZ8Gw==
+
 babel-jest@^29.7.0:
   version "29.7.0"
   resolved "https://registry.yarnpkg.com/babel-jest/-/babel-jest-29.7.0.tgz#f4369919225b684c56085998ac63dbd05be020d5"
@@ -4145,10 +4150,10 @@ expo-asset@~12.0.8:
     "@expo/image-utils" "^0.8.7"
     expo-constants "~18.0.8"
 
-expo-camera@~17.0.7:
-  version "17.0.7"
-  resolved "https://registry.yarnpkg.com/expo-camera/-/expo-camera-17.0.7.tgz#a5393448e660c9b3639754b4245fb20f0fa828f7"
-  integrity sha512-jdZfijfFjlVAuuIkDheA41YKpigPjqsN0juRvgyr7Lcyz+fvwZ3/RP50/n/hvuozH657wHxPfiyVVFa00z8TcQ==
+expo-camera@~17.0.8:
+  version "17.0.8"
+  resolved "https://registry.yarnpkg.com/expo-camera/-/expo-camera-17.0.8.tgz#f00cd97b59fce4db33d121cc0d6bccdc377283ed"
+  integrity sha512-BIGvS+3myaYqMtk2VXWgdcOMrewH+55BttmaYqq9tv9+o5w+RAbH9wlJSt0gdaswikiyzoWT7mOnLDleYClXmw==
   dependencies:
     invariant "^2.2.4"
 
@@ -4165,10 +4170,23 @@ expo-constants@~18.0.8:
     "@expo/config" "~12.0.8"
     "@expo/env" "~2.0.7"
 
+expo-constants@~18.0.9:
+  version "18.0.9"
+  resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-18.0.9.tgz#fcaf37e97ea2b928bd3b92f2ea9836984ab6e48b"
+  integrity sha512-sqoXHAOGDcr+M9NlXzj1tGoZyd3zxYDy215W6E0Z0n8fgBaqce9FAYQE2bu5X4G629AYig5go7U6sQz7Pjcm8A==
+  dependencies:
+    "@expo/config" "~12.0.9"
+    "@expo/env" "~2.0.7"
+
 expo-file-system@~19.0.13:
   version "19.0.13"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-19.0.13.tgz#28c6469821dda8b751565631022599afa54f266c"
   integrity sha512-ACDxp9/HA30XxqLEX39dTNvjf/9R64woMoeySu02xoclGl98VsHTQhKk0GF4BxjD0KwA9jamS/scTaC9P0BWLA==
+
+expo-file-system@~19.0.14:
+  version "19.0.14"
+  resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-19.0.14.tgz#1169fd9fcba8a5f1ef8e3c232ef8c62274ac4803"
+  integrity sha512-0CA7O5IYhab11TlxQlJAx0Xm9pdkk/zEHNiW+Hh/T4atWi9U/J38CIp7iNYSrBvy9dC3rJbze5D1ANcKKr4mSQ==
 
 expo-font@~14.0.8:
   version "14.0.8"
@@ -4212,6 +4230,13 @@ expo-modules-core@3.0.15:
   integrity sha512-vGI7osd0/IjprldD08k4bckWSu7ID4HhZNP68l/UtilONQ8XZig8mWJd/Fm7i7KGvE3HyuF+HOXE9l671no42Q==
   dependencies:
     invariant "^2.2.4"
+
+expo-sqlite@^16.0.8:
+  version "16.0.8"
+  resolved "https://registry.yarnpkg.com/expo-sqlite/-/expo-sqlite-16.0.8.tgz#c2fb269ebc601d79c20cb1c83423e8d695013848"
+  integrity sha512-xw776gFgH4ZM5oGs0spSLNmkHO/kJ/EuRXGzE4/22yII9EmG84vm7aM/M2aEb8taBTqwhSGYUpkwkRT5YFFmsg==
+  dependencies:
+    await-lock "^2.2.2"
 
 expo-status-bar@~3.0.8:
   version "3.0.8"

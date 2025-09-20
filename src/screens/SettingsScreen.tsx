@@ -1,9 +1,11 @@
 // src/screens/SettingsScreen.tsx
 
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Text, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useAppStore } from '../store/useAppStore';             // for logout
+import { useOfflineTxStore } from '../store/offlineTxStore';
+import { testOfflineSystem, cleanupTestData } from '../lib/testOfflineSystem';
 import {
   useAppKit,
   useAppKitState,
@@ -14,6 +16,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 
 export default function SettingsScreen() {
+  const [isTesting, setIsTesting] = useState(false);
+  
   // AppKit hooks
   const { open, close }   = useAppKit();
   const { open: isModalOpen } = useAppKitState();
@@ -22,6 +26,9 @@ export default function SettingsScreen() {
 
   // Zustand logout
   const resetUser = useAppStore((s) => s.resetUser);
+  
+  // Offline store
+  const { unsyncedCount, syncPendingTransactions } = useOfflineTxStore();
 
   // Derived flags
   const connected = Boolean(address);
@@ -33,6 +40,31 @@ export default function SettingsScreen() {
 
   const handleLogout = () => {
     resetUser();
+  };
+
+  const handleTestOfflineSystem = async () => {
+    setIsTesting(true);
+    try {
+      const result = await testOfflineSystem();
+      Alert.alert(
+        result.success ? 'Test Passed' : 'Test Failed',
+        result.message,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert('Test Error', `Failed to run test: ${error}`);
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleCleanupTestData = async () => {
+    try {
+      await cleanupTestData();
+      Alert.alert('Cleanup Complete', 'Test data has been removed');
+    } catch (error) {
+      Alert.alert('Cleanup Error', `Failed to cleanup: ${error}`);
+    }
   };
 
   return (
@@ -62,6 +94,41 @@ export default function SettingsScreen() {
         {isModalOpen && <ActivityIndicator />}
       </TouchableOpacity>
 
+      {/* Sync Status row */}
+      <View style={styles.row}>
+        <IconButton icon="sync" size={20} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowTitle}>Sync Status</Text>
+          <Text style={styles.rowSub}>
+            {unsyncedCount > 0 ? `${unsyncedCount} pending sync` : 'All synced'}
+          </Text>
+        </View>
+        {unsyncedCount > 0 && (
+          <TouchableOpacity onPress={syncPendingTransactions}>
+            <Text style={styles.syncButton}>Sync</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Test Offline System row */}
+      <TouchableOpacity style={styles.row} onPress={handleTestOfflineSystem}>
+        <IconButton icon="test-tube" size={20} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowTitle}>Test Offline System</Text>
+          <Text style={styles.rowSub}>Run offline functionality tests</Text>
+        </View>
+        {isTesting && <ActivityIndicator />}
+      </TouchableOpacity>
+
+      {/* Cleanup Test Data row */}
+      <TouchableOpacity style={styles.row} onPress={handleCleanupTestData}>
+        <IconButton icon="delete" size={20} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowTitle}>Cleanup Test Data</Text>
+          <Text style={styles.rowSub}>Remove test transactions</Text>
+        </View>
+      </TouchableOpacity>
+
       {/* Log-out button */}
       <TouchableOpacity style={styles.logout} onPress={handleLogout}>
         <Text style={styles.logoutLabel}>Log out</Text>
@@ -82,6 +149,13 @@ const styles = StyleSheet.create({
   rowTitle: { fontSize: 15, fontWeight: '600', color: '#000' },
   rowSub:   { fontSize: 12, color: '#666' },
 
+  syncButton: {
+    color: '#2196F3',
+    fontWeight: '600',
+    fontSize: 14,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
   logout: {
     marginTop: 'auto',
     borderWidth: 1,

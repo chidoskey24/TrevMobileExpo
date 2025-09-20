@@ -12,6 +12,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { useQuery } from '@tanstack/react-query';
 import { polygonAmoy } from '@wagmi/core/chains';
 import { useTxStore } from '../store/txStore';
+import SyncStatus from '../components/SyncStatus';
 
 export default function DashboardScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -48,8 +49,10 @@ export default function DashboardScreen() {
 
     const isReady = !!address && !!balanceData && polPrice !== 0;
 
-    /* ───────────────── dummy tx data (static for now) ───────────── */
-    const txData = useTxStore(s=>s.txs);
+    /* ───────────────── transaction data ───────────── */
+    const allTxData = useTxStore(s=>s.txs);
+    const txData = allTxData.slice(0, 4); // Show only first 4 transactions
+    const hasMoreTransactions = allTxData.length > 4;
 
 
   return (
@@ -59,6 +62,8 @@ export default function DashboardScreen() {
         nairaBalance={isReady ? `₦${nairaValue.toFixed(2)}` : '₦…'}
         tokenBalance={isReady ? `${polBalance.toFixed(4)} POL` : '… POL'}
       />
+
+      <SyncStatus showDetails={true} />
 
       <View style={styles.buttonRow}>
         <TouchableOpacity style={[styles.actionBtn, styles.leftBtn]} onPress={() => navigation.navigate('Deposit')}>
@@ -71,11 +76,27 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.txCard}>
-        <Text style={styles.txHeader}>Transactions</Text>
+        <View style={styles.txHeaderContainer}>
+          <Text style={styles.txHeader}>Transactions</Text>
+          {hasMoreTransactions && (
+            <TouchableOpacity 
+              style={styles.viewMoreButton}
+              onPress={() => navigation.navigate('Transactions')}
+            >
+              <Text style={styles.viewMoreText}>View More</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-        {txData.map(tx => (
+        {txData.length > 0 ? (
+          txData.map(tx => (
             <TransactionItem key={tx.id} {...tx} />
-        ))}
+          ))
+        ) : (
+          <View style={styles.emptyTxContainer}>
+            <Text style={styles.emptyTxText}>No transactions yet</Text>
+          </View>
+        )}
       </View>
       {/*  TODO: Deposit / Withdraw buttons and Tx list  */}
     </SafeAreaView>
@@ -119,9 +140,37 @@ txCard: {
   shadowOpacity: 0.05,
   shadowRadius: 8,
 },
+txHeaderContainer: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingHorizontal: 18,
+  paddingTop: 18,
+  paddingBottom: 8,
+},
 txHeader: {
   fontSize: 17,
   fontWeight: '700',
-  margin: 18,
+},
+viewMoreButton: {
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  borderRadius: 12,
+  backgroundColor: '#F0F0F0',
+},
+viewMoreText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#2196F3',
+},
+emptyTxContainer: {
+  paddingHorizontal: 18,
+  paddingVertical: 20,
+  alignItems: 'center',
+},
+emptyTxText: {
+  fontSize: 14,
+  color: '#999',
+  fontStyle: 'italic',
 },
 });

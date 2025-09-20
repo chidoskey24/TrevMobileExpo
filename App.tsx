@@ -27,11 +27,17 @@ import {
 } from '@reown/appkit-wagmi-react-native';
 
 import RootNavigator from './src/navigation/RootNavigator';
+import OfflineInitializer from './src/components/OfflineInitializer';
 
 // ───────── AppKit setup ─────────
 
-// Suppress WalletConnect duplicate listener warning during dev reloads
-LogBox.ignoreLogs(['emitting session_request']);
+// Suppress WalletConnect warnings during dev reloads
+LogBox.ignoreLogs([
+  'emitting session_request',
+  'Restore will override',
+  'subscription:',
+  'WalletConnect',
+]);
 
 const projectId = '32a6f24de0a63b0c51920ddf492e834f';
 const metadata = {
@@ -61,16 +67,65 @@ const wagmiConfig = defaultWagmiConfig({
 
 // Ensure createAppKit is invoked only once (prevents duplicate listeners after Fast Refresh)
 if (!(global as any)._appkitInitialized) {
-  createAppKit({
-    projectId,
-    wagmiConfig,
-    metadata,
-    defaultChain: polygonAmoy,
-  });
-  (global as any)._appkitInitialized = true;
+  try {
+    createAppKit({
+      projectId,
+      wagmiConfig,
+      metadata,
+      defaultChain: polygonAmoy,
+      // Add storage configuration to prevent session restoration issues
+      storage: {
+        getItem: async (key: string) => {
+          try {
+            return null; // Disable persistent storage to prevent restoration conflicts
+          } catch (error) {
+            console.warn('Storage getItem error:', error);
+            return null;
+          }
+        },
+        setItem: async (key: string, value: string) => {
+          // No-op to prevent storage issues
+        },
+        removeItem: async (key: string) => {
+          // No-op to prevent storage issues
+        },
+      },
+    });
+    (global as any)._appkitInitialized = true;
+    console.log('✅ AppKit initialized successfully');
+  } catch (error) {
+    console.error('❌ AppKit initialization failed:', error);
+  }
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
+
+// Cleanup function for WalletConnect sessions
+const cleanupWalletConnect = () => {
+  try {
+    // Clear any existing WalletConnect sessions
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const keys = Object.keys(window.localStorage);
+      keys.forEach(key => {
+        if (key.includes('walletconnect') || key.includes('wc@')) {
+          window.localStorage.removeItem(key);
+        }
+      });
+    }
+  } catch (error) {
+    console.warn('WalletConnect cleanup error:', error);
+  }
+};
+
+// Run cleanup on app start
+cleanupWalletConnect();
 
 const paperTheme = {
   ...DefaultTheme,
@@ -88,6 +143,7 @@ export default function App() {
         <PaperProvider theme={paperTheme}>
           <WagmiProvider config={wagmiConfig}>
             <QueryClientProvider client={queryClient}>
+              <OfflineInitializer />
               <NavigationContainer>
                 <RootNavigator />
               </NavigationContainer>

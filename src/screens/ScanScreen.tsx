@@ -86,7 +86,7 @@ export default function ScanScreen() {
             const polPrice = priceJson['matic-network']?.ngn ?? 0;
             naira = amountEth * polPrice;
           } catch {}
-          addTx({
+          await addTx({
             id: txHash as string,
             type: 'withdraw',
             title: 'Paid',

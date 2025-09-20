@@ -16,6 +16,7 @@ import DepositScreen      from '../screens/DepositScreen';
 import WithdrawScreen     from '../screens/WithdrawScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import TransactionsScreen from '../screens/TransactionsScreen';
 
 /* ---------------- auth flow params ---------------- */
 export type AuthStackParamList = {
@@ -35,6 +36,7 @@ export type AppStackParamList = {
   Withdraw  : undefined;
   Notifications: undefined;
   Profile   : undefined;
+  Transactions: undefined;
 };
 
 /* merge for typing */
@@ -75,6 +77,7 @@ function AppNavigator() {
       <AppStack.Screen name="Withdraw"  component={WithdrawScreen} />
       <AppStack.Screen name="Notifications" component={NotificationsScreen} />
       <AppStack.Screen name="Profile" component={ProfileScreen} />
+      <AppStack.Screen name="Transactions" component={TransactionsScreen} />
     </AppStack.Navigator>
   );
 }
