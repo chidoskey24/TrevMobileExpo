@@ -36,15 +36,11 @@ export default function TransactionsScreen() {
       
       Alert.alert(
         'Statement Generated',
-        `Transaction statement has been generated successfully!\n\nYou can copy the content and save it as a CSV file.`,
+        `Transaction statement has been generated successfully!\n\nCheck the console logs for the CSV content.`,
         [
           { text: 'OK', style: 'default' }
         ]
       );
-      
-      // Log the CSV content to console for now
-      console.log('Generated CSV Content:');
-      console.log(csvContent);
       
     } catch (error) {
       Alert.alert(

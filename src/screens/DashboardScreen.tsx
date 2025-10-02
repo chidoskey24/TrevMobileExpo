@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { polygonAmoy } from '@wagmi/core/chains';
 import { useTxStore } from '../store/txStore';
 import SyncStatus from '../components/SyncStatus';
+import StatusFeedback from '../components/StatusFeedback';
 
 export default function DashboardScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -64,6 +65,8 @@ export default function DashboardScreen() {
       />
 
       <SyncStatus showDetails={true} />
+
+      <StatusFeedback driverId={useAppStore.getState().user?.id || 'unknown'} showDetails={true} />
 
       <View style={styles.buttonRow}>
         <TouchableOpacity style={[styles.actionBtn, styles.leftBtn]} onPress={() => navigation.navigate('Deposit')}>

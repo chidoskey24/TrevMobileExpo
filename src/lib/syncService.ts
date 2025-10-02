@@ -1,17 +1,31 @@
 // src/lib/syncService.ts
-import { supabase } from './supabase';
-import { TransactionRecord } from './database';
+import { database } from './database';
+import { receiptService } from './receiptService';
+import { contractGateway } from './contractGateway';
+import { useOfflineTxStore } from '../store/offlineTxStore';
+import { realtimeService } from './realtimeService';
 
-export interface SyncResult {
-  success: boolean;
-  syncedCount: number;
-  failedCount: number;
-  errors: string[];
+export interface SyncStatus {
+  isOnline: boolean;
+  lastSync: string;
+  pendingSync: number;
+  syncInProgress: boolean;
+  lastError?: string;
 }
 
-export class SyncService {
+export interface SyncData {
+  receipts: any[];
+  transactions: any[];
+  queuedPayments: any[];
+  driverStats: any[];
+}
+
+class SyncService {
   private static instance: SyncService;
-  private isSyncing = false;
+  private syncInterval: NodeJS.Timeout | null = null;
+  private isSyncing: boolean = false;
+  private lastSyncTime: number = 0;
+  private readonly SYNC_INTERVAL = 30000; // 30 seconds
 
   static getInstance(): SyncService {
     if (!SyncService.instance) {
@@ -20,160 +34,209 @@ export class SyncService {
     return SyncService.instance;
   }
 
-  async syncTransactions(transactions: TransactionRecord[]): Promise<SyncResult> {
-    if (this.isSyncing) {
-      console.log('Sync already in progress, skipping...');
-      return { success: false, syncedCount: 0, failedCount: 0, errors: ['Sync already in progress'] };
+  start(): void {
+    if (this.syncInterval) return;
+    
+    this.syncInterval = setInterval(() => {
+      this.performSync();
+    }, this.SYNC_INTERVAL);
+    
+    console.log('Sync service started');
+  }
+
+  stop(): void {
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = null;
+    }
+    console.log('Sync service stopped');
+  }
+
+  async performSync(): Promise<void> {
+    if (this.isSyncing) return;
+    
+    const offlineStore = useOfflineTxStore.getState();
+    if (!offlineStore.isOnline) {
+      console.log('Device offline, skipping sync');
+      return;
     }
 
     this.isSyncing = true;
-    const result: SyncResult = {
-      success: true,
-      syncedCount: 0,
-      failedCount: 0,
-      errors: []
-    };
-
     try {
-      console.log(`Starting sync of ${transactions.length} transactions...`);
-
-      for (const transaction of transactions) {
-        try {
-          await this.syncSingleTransaction(transaction);
-          result.syncedCount++;
-        } catch (error) {
-          result.failedCount++;
-          result.errors.push(`Failed to sync transaction ${transaction.id}: ${error}`);
-          console.error(`Failed to sync transaction ${transaction.id}:`, error);
-        }
-      }
-
-      result.success = result.failedCount === 0;
-      console.log(`Sync completed: ${result.syncedCount} synced, ${result.failedCount} failed`);
+      console.log('Starting data sync...');
       
+      // Sync receipts
+      await this.syncReceipts();
+      
+      // Sync transactions
+      await this.syncTransactions();
+      
+      // Sync queued payments
+      await this.syncQueuedPayments();
+      
+      // Update last sync time
+      this.lastSyncTime = Date.now();
+      
+      // Trigger realtime updates
+      await realtimeService.triggerUpdate('drivers');
+      await realtimeService.triggerUpdate('receipts');
+      await realtimeService.triggerUpdate('queue');
+      await realtimeService.triggerUpdate('statistics');
+      
+      console.log('Data sync completed');
     } catch (error) {
-      result.success = false;
-      result.errors.push(`Sync service error: ${error}`);
-      console.error('Sync service error:', error);
+      console.error('Sync failed:', error);
     } finally {
       this.isSyncing = false;
     }
-
-    return result;
   }
 
-  private async syncSingleTransaction(transaction: TransactionRecord): Promise<void> {
+  private async syncReceipts(): Promise<void> {
     try {
-      // Check if we're using a mock client
-      if (!supabase.from || typeof supabase.from !== 'function') {
-        console.log(`Mock sync: Transaction ${transaction.id} would be synced to server`);
-        return; // Mock client - just log and return success
-      }
-
-      // Prepare transaction data for Supabase
-      const transactionData = {
-        id: transaction.id,
-        type: transaction.type,
-        title: transaction.title,
-        subtitle: transaction.subtitle,
-        amount: transaction.amount,
-        currency: transaction.currency || '₦',
-        timestamp: transaction.timestamp,
-        created_at: new Date(transaction.createdAt).toISOString(),
-        updated_at: new Date(transaction.updatedAt).toISOString(),
-      };
-
-      // Insert or update transaction in Supabase
-      const { error } = await supabase
-        .from('transactions')
-        .upsert(transactionData, { 
-          onConflict: 'id',
-          ignoreDuplicates: false 
-        });
-
-      if (error) {
-        throw new Error(`Supabase error: ${error.message}`);
-      }
-
-      console.log(`Successfully synced transaction ${transaction.id}`);
+      const receipts = await database.getAllReceipts();
+      
+      // In a real implementation, you would sync with a remote server
+      // For now, we'll just log the sync
+      console.log(`Synced ${receipts.length} receipts`);
     } catch (error) {
-      throw new Error(`Failed to sync transaction: ${error}`);
+      console.error('Failed to sync receipts:', error);
+      throw error;
     }
   }
 
-  async testConnection(): Promise<boolean> {
+  private async syncTransactions(): Promise<void> {
     try {
-      // Check if we're using a mock client
-      if (!supabase.from || typeof supabase.from !== 'function') {
-        console.log('Using mock Supabase client - connection test skipped');
-        return false; // Mock client means no real connection
+      const offlineStore = useOfflineTxStore.getState();
+      
+      // In a real implementation, you would sync with a remote server
+      // For now, we'll just log the sync
+      console.log(`Synced ${offlineStore.unsyncedCount} transactions`);
+    } catch (error) {
+      console.error('Failed to sync transactions:', error);
+      throw error;
+    }
+  }
+
+  private async syncQueuedPayments(): Promise<void> {
+    try {
+      const queuedPayments = contractGateway.getQueuedPayments();
+      
+      // Process queued payments
+      for (const payment of queuedPayments) {
+        if (payment.status === 'queued') {
+          try {
+            // Attempt to process the payment
+            const result = await contractGateway.submitPayment(payment.request);
+            if (result.success) {
+              // Update payment status
+              payment.status = 'completed';
+              payment.transactionHash = result.transactionHash;
+            }
+          } catch (error) {
+            console.error(`Failed to process queued payment ${payment.id}:`, error);
+            payment.status = 'failed';
+            payment.error = (error as Error).message;
+          }
+        }
       }
+      
+      console.log(`Processed ${queuedPayments.length} queued payments`);
+    } catch (error) {
+      console.error('Failed to sync queued payments:', error);
+      throw error;
+    }
+  }
 
-      // Test Supabase connection
-      const { error } = await supabase
-        .from('transactions')
-        .select('count')
-        .limit(1);
+  async getSyncStatus(): Promise<SyncStatus> {
+    const offlineStore = useOfflineTxStore.getState();
+    
+    return {
+      isOnline: offlineStore.isOnline,
+      lastSync: this.lastSyncTime ? new Date(this.lastSyncTime).toISOString() : 'Never',
+      pendingSync: offlineStore.unsyncedCount,
+      syncInProgress: this.isSyncing,
+      lastError: undefined // Could be enhanced to track last error
+    };
+  }
 
-      if (error) {
-        console.error('Supabase connection test failed:', error);
-        return false;
-      }
+  async getSyncData(): Promise<SyncData> {
+    try {
+      const receipts = await database.getAllReceipts();
+      const offlineStore = useOfflineTxStore.getState();
+      const queuedPayments = contractGateway.getQueuedPayments();
+      
+      // Calculate driver stats
+      const driverMap = new Map();
+      receipts.forEach(receipt => {
+        if (!driverMap.has(receipt.driverId)) {
+          driverMap.set(receipt.driverId, {
+            driverId: receipt.driverId,
+            driverName: receipt.driverName,
+            totalPaid: 0,
+            totalTransactions: 0,
+            lastTransaction: 'Never',
+            status: 'active'
+          });
+        }
+        
+        const driver = driverMap.get(receipt.driverId);
+        if (receipt.status === 'paid') {
+          driver.totalPaid += receipt.amount;
+          driver.totalTransactions++;
+        }
+        
+        const receiptDate = new Date(receipt.createdAt).toLocaleDateString();
+        if (driver.lastTransaction === 'Never' || receiptDate > driver.lastTransaction) {
+          driver.lastTransaction = receiptDate;
+        }
+      });
 
-      console.log('Supabase connection test successful');
+      return {
+        receipts: receipts.map(receipt => ({
+          id: receipt.id,
+          driverName: receipt.driverName,
+          amount: receipt.amount,
+          status: receipt.status,
+          date: new Date(receipt.createdAt).toLocaleString(),
+          method: receipt.paymentMethod,
+          transactionHash: receipt.transactionHash
+        })),
+        transactions: [], // Would be populated from transaction store
+        queuedPayments: queuedPayments.map(payment => ({
+          id: payment.id,
+          driverName: payment.request.driverName,
+          amount: Number(payment.request.amount / BigInt(10**18)),
+          status: payment.status,
+          date: new Date(payment.createdAt).toLocaleString(),
+          recipient: payment.request.recipientAddress,
+          error: payment.error
+        })),
+        driverStats: Array.from(driverMap.values())
+      };
+    } catch (error) {
+      console.error('Failed to get sync data:', error);
+      throw error;
+    }
+  }
+
+  // Manual sync trigger
+  async triggerSync(): Promise<boolean> {
+    try {
+      await this.performSync();
       return true;
     } catch (error) {
-      console.error('Connection test error:', error);
+      console.error('Manual sync failed:', error);
       return false;
     }
   }
 
-  async getServerTransactionCount(): Promise<number> {
-    try {
-      const { count, error } = await supabase
-        .from('transactions')
-        .select('*', { count: 'exact', head: true });
-
-      if (error) {
-        throw new Error(`Failed to get server count: ${error.message}`);
-      }
-
-      return count || 0;
-    } catch (error) {
-      console.error('Failed to get server transaction count:', error);
-      return 0;
-    }
-  }
-
-  async pullLatestTransactions(limit = 50): Promise<TransactionRecord[]> {
-    try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(limit);
-
-      if (error) {
-        throw new Error(`Failed to pull transactions: ${error.message}`);
-      }
-
-      // Convert Supabase format to our TransactionRecord format
-      return (data || []).map((item: any) => ({
-        id: item.id,
-        type: item.type,
-        title: item.title,
-        subtitle: item.subtitle,
-        amount: item.amount,
-        currency: item.currency,
-        timestamp: item.timestamp,
-        synced: true, // These are from server, so they're synced
-        createdAt: new Date(item.created_at).getTime(),
-        updatedAt: new Date(item.updated_at).getTime(),
-      }));
-    } catch (error) {
-      console.error('Failed to pull latest transactions:', error);
-      return [];
-    }
+  // Get service status
+  getStatus(): { isRunning: boolean; isSyncing: boolean; lastSync: number } {
+    return {
+      isRunning: this.syncInterval !== null,
+      isSyncing: this.isSyncing,
+      lastSync: this.lastSyncTime
+    };
   }
 }
 

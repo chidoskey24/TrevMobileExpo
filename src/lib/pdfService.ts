@@ -23,8 +23,6 @@ export class PDFService {
       // Generate CSV content
       const csvContent = this.generateCSVContent(data);
       
-      // For now, we'll return the CSV content as a string
-      // In a real app, you could use expo-sharing to share the content
       console.log('Statement generated successfully');
       console.log('CSV Content:', csvContent);
       
@@ -99,20 +97,6 @@ export class PDFService {
   
   private formatDateForFilename(date: Date): string {
     return date.toISOString().split('T')[0]; // YYYY-MM-DD format
-  }
-  
-  async shareStatement(csvContent: string): Promise<void> {
-    try {
-      console.log(`Statement ready for sharing: ${csvContent.substring(0, 100)}...`);
-      
-      // You can implement actual sharing here using expo-sharing
-      // import * as Sharing from 'expo-sharing';
-      // await Sharing.shareAsync(filePath);
-      
-    } catch (error) {
-      console.error('Error sharing statement:', error);
-      throw error;
-    }
   }
 }
 

@@ -78,6 +78,9 @@ export const useOfflineTxStore = create<OfflineTxState>()(
 
       addTransaction: async (tx) => {
         try {
+          // Ensure database is initialized before adding transaction
+          await database.init();
+          
           // Add to database first (offline-first)
           await database.insertTransaction(tx);
           

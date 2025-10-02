@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrevMobile Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #007AFF;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .driver-list {
+            padding: 20px;
+        }
+
+        .driver-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .driver-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .driver-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .driver-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .status-inactive {
+            background: #ffebee;
+            color: #F44336;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #FF9800;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-danger {
+            background: #F44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-online {
+            background: #4CAF50;
+        }
+
+        .status-offline {
+            background: #F44336;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            border-bottom-color: #007AFF;
+            color: #007AFF;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .receipt-info {
+            flex: 1;
+        }
+
+        .receipt-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .receipt-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .receipt-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-paid {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .status-queued {
+            background: #fff3e0;
+            color: #FF9800;
+        }
+
+        .status-failed {
+            background: #ffebee;
+            color: #F44336;
+        }
+
+        .queue-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .queue-info {
+            flex: 1;
+        }
+
+        .queue-amount {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .queue-details {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .queue-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-processing {
+            background: #e3f2fd;
+            color: #2196F3;
+        }
+
+        .status-completed {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #007AFF;
+            color: white;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-style: italic;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #d32f2f;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .auth-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .login-form {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .login-form h3 {
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-form button:hover {
+            background: #0056b3;
+        }
+
+        .user-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info span {
+            color: #fff;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .driver-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .driver-stats {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .action-buttons {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TrevMobile Admin Dashboard</h1>
+        <p>Driver management and system monitoring</p>
+        <div class="auth-section" id="authSection" style="display: none;">
+            <div class="login-form">
+                <h3>Admin Login</h3>
+                <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 12px;">
+                    <strong>Demo Mode:</strong><br>
+                    The dashboard is running in demo mode with mock data.<br>
+                    This demonstrates the admin dashboard functionality.
+                </div>
+                <input type="text" id="username" placeholder="Username" value="admin" />
+                <input type="password" id="password" placeholder="Password" value="admin123" />
+                <button onclick="handleLogin()">Login</button>
+                <div id="loginError" class="error" style="display: none;"></div>
+            </div>
+        </div>
+        <div class="user-info" id="userInfo" style="display: none;">
+            <span>Welcome, <strong id="userName"></strong></span>
+            <button onclick="handleLogout()" class="logout-btn">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Connection Status -->
+        <div class="connection-status">
+            <div class="status-dot status-offline" id="connectionDot"></div>
+            <span id="connectionText">Connecting to mobile app...</span>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Drivers</h3>
+                <div class="stat-value" id="totalDrivers">0</div>
+                <div class="stat-label">Registered drivers</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Drivers</h3>
+                <div class="stat-value" id="activeDrivers">0</div>
+                <div class="stat-label">Currently active</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Revenue</h3>
+                <div class="stat-value" id="totalRevenue">₦0</div>
+                <div class="stat-label">All time collected</div>
+            </div>
+            <div class="stat-card">
+                <h3>Today's Transactions</h3>
+                <div class="stat-value" id="todayTransactions">0</div>
+                <div class="stat-label">Payments processed</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="section">
+            <div class="tabs">
+                <div class="tab active" onclick="showTab('drivers')">Drivers</div>
+                <div class="tab" onclick="showTab('receipts')">Receipts</div>
+                <div class="tab" onclick="showTab('queue')">Transaction Queue</div>
+                <div class="tab" onclick="showTab('system')">System Status</div>
+            </div>
+
+            <!-- Drivers Tab -->
+            <div id="drivers-tab" class="tab-content active">
+                <div class="section-header">
+                    <div class="section-title">Driver Management</div>
+                    <div class="section-subtitle">Manage driver accounts and view statistics</div>
+                </div>
+                <div class="driver-list" id="driverList">
+                    <div class="loading">Loading drivers...</div>
+                </div>
+            </div>
+
+            <!-- Receipts Tab -->
+            <div id="receipts-tab" class="tab-content">
+                <div class="section-header">
+                    <div class="section-title">Payment Receipts</div>
+                    <div class="section-subtitle">View all payment receipts and transaction history</div>
+                </div>
+                <div class="driver-list" id="receiptsList">
+                    <div class="loading">Loading receipts...</div>
+                </div>
+            </div>
+
+            <!-- Queue Tab -->
+            <div id="queue-tab" class="tab-content">
+                <div class="section-header">
+                    <div class="section-title">Transaction Queue</div>
+                    <div class="section-subtitle">Monitor queued and pending transactions</div>
+                </div>
+                <div class="driver-list" id="queueList">
+                    <div class="loading">Loading queue...</div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div id="system-tab" class="tab-content">
+                <div class="section-header">
+                    <div class="section-title">System Status</div>
+                    <div class="section-subtitle">Monitor system health and performance</div>
+                </div>
+                <div class="driver-list" id="systemStatus">
+                    <div class="loading">Loading system status...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="refreshData()" title="Refresh Data">↻</button>
+
+    <script>
+        // API client for connecting to mobile app
+        class ApiClient {
+                constructor() {
+                    this.baseUrl = 'http://localhost:3001';
+                    this.isConnected = false;
+                    this.mockMode = false; // Try to connect to real mobile app
+                    this.authToken = null;
+                }
+
+                setAuthToken(token) {
+                    this.authToken = token;
+                }
+
+                getAuthToken() {
+                    return this.authToken;
+                }
+
+            async testConnection() {
+                if (this.mockMode) {
+                    // Simulate connection for demo purposes
+                    this.isConnected = true;
+                    return true;
+                }
+                try {
+                    const response = await fetch(`${this.baseUrl}/health`);
+                    this.isConnected = response.ok;
+                    return this.isConnected;
+                } catch (error) {
+                    this.isConnected = false;
+                    return false;
+                }
+            }
+
+            async getDrivers() {
+                if (this.mockMode) {
+                    // Return mock data for demo
+                    return [
+                        { driverId: '1', driverName: 'John Doe', totalPaid: 15000, totalTransactions: 45, lastTransaction: '2024-01-15', status: 'active' },
+                        { driverId: '2', driverName: 'Jane Smith', totalPaid: 12000, totalTransactions: 38, lastTransaction: '2024-01-14', status: 'active' },
+                        { driverId: '3', driverName: 'Mike Johnson', totalPaid: 8000, totalTransactions: 25, lastTransaction: '2024-01-10', status: 'inactive' }
+                    ];
+                }
+                try {
+                    const headers = {};
+                    if (this.authToken) {
+                        headers['Authorization'] = `Bearer ${this.authToken}`;
+                    }
+                    const response = await fetch(`${this.baseUrl}/api/drivers`, { headers });
+                    const data = await response.json();
+                    return data.success ? data.data : [];
+                } catch (error) {
+                    console.error('Failed to fetch drivers:', error);
+                    return [];
+                }
+            }
+
+            async getReceipts() {
+                if (this.mockMode) {
+                    // Return mock data for demo
+                    return [
+                        { id: '1', driverName: 'John Doe', amount: 500, status: 'paid', date: '2024-01-15 14:30', method: 'Blockchain (POL)' },
+                        { id: '2', driverName: 'Jane Smith', amount: 750, status: 'paid', date: '2024-01-15 13:45', method: 'Blockchain (POL)' },
+                        { id: '3', driverName: 'Mike Johnson', amount: 300, status: 'queued', date: '2024-01-15 12:20', method: 'Blockchain (POL) - Offline' }
+                    ];
+                }
+                try {
+                    const response = await fetch(`${this.baseUrl}/api/receipts`);
+                    const data = await response.json();
+                    return data.success ? data.data : [];
+                } catch (error) {
+                    console.error('Failed to fetch receipts:', error);
+                    return [];
+                }
+            }
+
+            async getQueue() {
+                if (this.mockMode) {
+                    // Return mock data for demo
+                    return [
+                        { id: '1', driverName: 'Mike Johnson', amount: 300, status: 'queued', date: '2024-01-15 12:20', recipient: '0x1234...5678' },
+                        { id: '2', driverName: 'Sarah Wilson', amount: 200, status: 'processing', date: '2024-01-15 11:45', recipient: '0xabcd...efgh' }
+                    ];
+                }
+                try {
+                    const response = await fetch(`${this.baseUrl}/api/queue`);
+                    const data = await response.json();
+                    return data.success ? data.data : [];
+                } catch (error) {
+                    console.error('Failed to fetch queue:', error);
+                    return [];
+                }
+            }
+
+            async getStatistics() {
+                if (this.mockMode) {
+                    // Return mock data for demo
+                    return {
+                        totalDrivers: 3,
+                        activeDrivers: 2,
+                        totalRevenue: 35000,
+                        todayTransactions: 8,
+                        queuedPayments: 2,
+                        failedPayments: 0
+                    };
+                }
+                try {
+                    const headers = {};
+                    if (this.authToken) {
+                        headers['Authorization'] = `Bearer ${this.authToken}`;
+                    }
+                    const response = await fetch(`${this.baseUrl}/api/statistics`, { headers });
+                    const data = await response.json();
+                    return data.success ? data.data : {
+                        totalDrivers: 0,
+                        activeDrivers: 0,
+                        totalRevenue: 0,
+                        todayTransactions: 0,
+                        queuedPayments: 0,
+                        failedPayments: 0
+                    };
+                } catch (error) {
+                    console.error('Failed to fetch statistics:', error);
+                    return {
+                        totalDrivers: 0,
+                        activeDrivers: 0,
+                        totalRevenue: 0,
+                        todayTransactions: 0,
+                        queuedPayments: 0,
+                        failedPayments: 0
+                    };
+                }
+            }
+
+            async getSystemStatus() {
+                if (this.mockMode) {
+                    // Return mock data for demo
+                    return {
+                        isOnline: true,
+                        unsyncedCount: 0,
+                        databaseStatus: 'healthy',
+                        blockchainStatus: 'connected',
+                        lastSync: new Date().toISOString(),
+                        connectedDevices: 3
+                    };
+                }
+                try {
+                    const headers = {};
+                    if (this.authToken) {
+                        headers['Authorization'] = `Bearer ${this.authToken}`;
+                    }
+                    const response = await fetch(`${this.baseUrl}/api/status`, { headers });
+                    const data = await response.json();
+                    return data.success ? data.data : {
+                        isOnline: false,
+                        unsyncedCount: 0,
+                        databaseStatus: 'error',
+                        blockchainStatus: 'disconnected',
+                        lastSync: 'Never',
+                        connectedDevices: 0
+                    };
+                } catch (error) {
+                    console.error('Failed to fetch system status:', error);
+                    return {
+                        isOnline: false,
+                        unsyncedCount: 0,
+                        databaseStatus: 'error',
+                        blockchainStatus: 'disconnected',
+                        lastSync: 'Never',
+                        connectedDevices: 0
+                    };
+                }
+            }
+
+            async updateDriverStatus(driverId, status) {
+                if (this.mockMode) {
+                    // Simulate successful update
+                    return true;
+                }
+                try {
+                    const response = await fetch(`${this.baseUrl}/api/drivers/${driverId}/status`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status })
+                    });
+                    const data = await response.json();
+                    return data.success;
+                } catch (error) {
+                    console.error('Failed to update driver status:', error);
+                    return false;
+                }
+            }
+
+            async triggerUpdate(type) {
+                if (this.mockMode) {
+                    // Simulate successful update
+                    return true;
+                }
+                try {
+                    const response = await fetch(`${this.baseUrl}/api/realtime/trigger`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ type })
+                    });
+                    const data = await response.json();
+                    return data.success;
+                } catch (error) {
+                    console.error('Failed to trigger update:', error);
+                    return false;
+                }
+            }
+
+            async getSyncStatus() {
+                if (this.mockMode) {
+                    // Return mock sync status
+                    return {
+                        isOnline: true,
+                        lastSync: new Date().toISOString(),
+                        pendingSync: 0,
+                        syncInProgress: false
+                    };
+                }
+                try {
+                    const response = await fetch(`${this.baseUrl}/api/sync/status`);
+                    const data = await response.json();
+                    return data.success ? data.data : null;
+                } catch (error) {
+                    console.error('Failed to get sync status:', error);
+                    return null;
+                }
+            }
+
+            async triggerSync() {
+                if (this.mockMode) {
+                    // Simulate successful sync
+                    return true;
+                }
+                try {
+                    const response = await fetch(`${this.baseUrl}/api/sync/trigger`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    const data = await response.json();
+                    return data.success;
+                } catch (error) {
+                    console.error('Failed to trigger sync:', error);
+                    return false;
+                }
+            }
+        }
+
+        // Initialize API client
+        const apiClient = new ApiClient();
+        
+        // Get the mobile device's IP address for API calls
+        function getMobileDeviceIP() {
+            // Try to get the IP from the current location
+            // In a real scenario, you'd get this from the mobile app
+            // For now, we'll use localhost and let the user know if it fails
+            return 'localhost';
+        }
+
+        // Authentication state
+        let isAuthenticated = false;
+        let currentUser = null;
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Show selected tab
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            // Load tab data
+            loadTabData(tabName);
+        }
+
+        function loadTabData(tabName) {
+            switch(tabName) {
+                case 'drivers':
+                    loadDrivers();
+                    break;
+                case 'receipts':
+                    loadReceipts();
+                    break;
+                case 'queue':
+                    loadQueue();
+                    break;
+                case 'system':
+                    loadSystemStatus();
+                    break;
+            }
+        }
+
+        async function loadDrivers() {
+            const driverList = document.getElementById('driverList');
+            driverList.innerHTML = '<div class="loading">Loading drivers...</div>';
+            
+            try {
+                const drivers = await apiClient.getDrivers();
+                
+                if (drivers.length === 0) {
+                    driverList.innerHTML = '<div class="no-data">No drivers found</div>';
+                    return;
+                }
+                
+                driverList.innerHTML = drivers.map(driver => `
+                    <div class="driver-card">
+                        <div class="driver-info">
+                            <h4>${driver.driverName}</h4>
+                            <div class="driver-stats">
+                                <span>Total Paid: ₦${driver.totalPaid.toLocaleString()}</span>
+                                <span>Transactions: ${driver.totalTransactions}</span>
+                                <span>Last Payment: ${driver.lastTransaction}</span>
+                            </div>
+                        </div>
+                        <div class="action-buttons">
+                            <span class="status-badge status-${driver.status}">${driver.status}</span>
+                            ${driver.status !== 'active' ? `<button class="btn btn-primary" onclick="activateDriver('${driver.driverId}')">Activate</button>` : ''}
+                            ${driver.status !== 'inactive' ? `<button class="btn btn-danger" onclick="deactivateDriver('${driver.driverId}')">Deactivate</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load drivers:', error);
+                driverList.innerHTML = '<div class="error">Failed to load drivers</div>';
+            }
+        }
+
+        async function loadReceipts() {
+            const receiptsList = document.getElementById('receiptsList');
+            receiptsList.innerHTML = '<div class="loading">Loading receipts...</div>';
+            
+            try {
+                const receipts = await apiClient.getReceipts();
+                
+                if (receipts.length === 0) {
+                    receiptsList.innerHTML = '<div class="no-data">No receipts found</div>';
+                    return;
+                }
+                
+                receiptsList.innerHTML = receipts.map(receipt => `
+                    <div class="receipt-item">
+                        <div class="receipt-info">
+                            <div class="receipt-amount">₦${receipt.amount.toLocaleString()}</div>
+                            <div class="receipt-details">
+                                ${receipt.driverName} • ${receipt.date} • ${receipt.method}
+                            </div>
+                        </div>
+                        <span class="receipt-status status-${receipt.status}">${receipt.status}</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load receipts:', error);
+                receiptsList.innerHTML = '<div class="error">Failed to load receipts</div>';
+            }
+        }
+
+        async function loadQueue() {
+            const queueList = document.getElementById('queueList');
+            queueList.innerHTML = '<div class="loading">Loading queue...</div>';
+            
+            try {
+                const queue = await apiClient.getQueue();
+                
+                if (queue.length === 0) {
+                    queueList.innerHTML = '<div class="no-data">No queued payments</div>';
+                    return;
+                }
+                
+                queueList.innerHTML = queue.map(item => `
+                    <div class="queue-item">
+                        <div class="queue-info">
+                            <div class="queue-amount">₦${item.amount.toLocaleString()}</div>
+                            <div class="queue-details">
+                                ${item.driverName} • ${item.date} • To: ${item.recipient}
+                            </div>
+                        </div>
+                        <span class="queue-status status-${item.status}">${item.status}</span>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Failed to load queue:', error);
+                queueList.innerHTML = '<div class="error">Failed to load queue</div>';
+            }
+        }
+
+        async function loadSystemStatus() {
+            const systemStatus = document.getElementById('systemStatus');
+            systemStatus.innerHTML = '<div class="loading">Loading system status...</div>';
+            
+            try {
+                const status = await apiClient.getSystemStatus();
+                
+                systemStatus.innerHTML = `
+                    <div class="driver-card">
+                        <div class="driver-info">
+                            <h4>Database Status</h4>
+                            <div class="driver-stats">
+                                <span>Status: ${status.databaseStatus}</span>
+                                <span>Last Sync: ${status.lastSync}</span>
+                                <span>Pending Sync: ${status.unsyncedCount} transactions</span>
+                            </div>
+                        </div>
+                        <span class="status-badge status-${status.databaseStatus === 'healthy' ? 'active' : 'inactive'}">${status.databaseStatus}</span>
+                    </div>
+                    <div class="driver-card">
+                        <div class="driver-info">
+                            <h4>Blockchain Network</h4>
+                            <div class="driver-stats">
+                                <span>Network: Polygon Amoy</span>
+                                <span>Status: ${status.blockchainStatus}</span>
+                                <span>Last Block: 2 seconds ago</span>
+                            </div>
+                        </div>
+                        <span class="status-badge status-${status.blockchainStatus === 'connected' ? 'active' : 'inactive'}">${status.blockchainStatus}</span>
+                    </div>
+                    <div class="driver-card">
+                        <div class="driver-info">
+                            <h4>Mobile App Connection</h4>
+                            <div class="driver-stats">
+                                <span>Connected Devices: ${status.connectedDevices}</span>
+                                <span>Last Activity: 1 minute ago</span>
+                                <span>Offline Devices: ${status.isOnline ? 0 : 1}</span>
+                            </div>
+                        </div>
+                        <span class="status-badge status-${status.isOnline ? 'active' : 'inactive'}">${status.isOnline ? 'Online' : 'Offline'}</span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load system status:', error);
+                systemStatus.innerHTML = '<div class="error">Failed to load system status</div>';
+            }
+        }
+
+        async function updateStatistics() {
+            try {
+                const stats = await apiClient.getStatistics();
+                
+                document.getElementById('totalDrivers').textContent = stats.totalDrivers;
+                document.getElementById('activeDrivers').textContent = stats.activeDrivers;
+                document.getElementById('totalRevenue').textContent = `₦${stats.totalRevenue.toLocaleString()}`;
+                document.getElementById('todayTransactions').textContent = stats.todayTransactions;
+                document.getElementById('queuedPayments').textContent = stats.queuedPayments;
+                document.getElementById('failedPayments').textContent = stats.failedPayments;
+            } catch (error) {
+                console.error('Failed to update statistics:', error);
+                // Keep existing values on error
+            }
+        }
+
+        async function activateDriver(driverId) {
+            try {
+                const success = await apiClient.updateDriverStatus(driverId, 'active');
+                if (success) {
+                    loadDrivers();
+                    updateStatistics();
+                    alert(`Driver activated successfully`);
+                } else {
+                    alert('Failed to activate driver');
+                }
+            } catch (error) {
+                console.error('Failed to activate driver:', error);
+                alert('Failed to activate driver');
+            }
+        }
+
+        async function deactivateDriver(driverId) {
+            try {
+                const success = await apiClient.updateDriverStatus(driverId, 'inactive');
+                if (success) {
+                    loadDrivers();
+                    updateStatistics();
+                    alert(`Driver deactivated successfully`);
+                } else {
+                    alert('Failed to deactivate driver');
+                }
+            } catch (error) {
+                console.error('Failed to deactivate driver:', error);
+                alert('Failed to deactivate driver');
+            }
+        }
+
+        async function refreshData() {
+            // Update connection status
+            document.getElementById('connectionText').textContent = 'Refreshing data...';
+            document.getElementById('connectionDot').className = 'status-dot status-offline';
+            
+            try {
+                // Test connection
+                const isConnected = await apiClient.testConnection();
+                
+                if (isConnected) {
+                    document.getElementById('connectionText').textContent = 'Connected to mobile app';
+                    document.getElementById('connectionDot').className = 'status-dot status-online';
+                    
+                    // Trigger sync
+                    await apiClient.triggerSync();
+                    
+                    // Refresh all data
+                    await updateStatistics();
+                    const activeTab = document.querySelector('.tab.active');
+                    if (activeTab) {
+                        const tabName = activeTab.textContent.toLowerCase();
+                        loadTabData(tabName);
+                    }
+                } else {
+                    document.getElementById('connectionText').textContent = 'Disconnected from mobile app';
+                    document.getElementById('connectionDot').className = 'status-dot status-offline';
+                }
+            } catch (error) {
+                console.error('Failed to refresh data:', error);
+                document.getElementById('connectionText').textContent = 'Connection error';
+                document.getElementById('connectionDot').className = 'status-dot status-offline';
+            }
+        }
+
+        // Authentication functions
+        async function handleLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // In mock mode, simulate successful login
+                if (apiClient.mockMode) {
+                    isAuthenticated = true;
+                    currentUser = { username: 'Admin' };
+                    // Simulate token storage
+                    localStorage.setItem('adminToken', 'mock-token'); 
+                    
+                    document.getElementById('authSection').style.display = 'none';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('userName').textContent = currentUser.username;
+                    document.querySelector('.container').style.display = 'block';
+                    
+                    await updateStatistics();
+                    loadDrivers();
+                    startRealtimeUpdates();
+                    return;
+                }
+
+                const response = await apiClient.login(username, password);
+                
+                if (response.success) {
+                    isAuthenticated = true;
+                    currentUser = response.data;
+                    apiClient.setAuthToken(response.data.token);
+                    
+                    // Hide login form, show user info
+                    document.getElementById('authSection').style.display = 'none';
+                    document.getElementById('userInfo').style.display = 'block';
+                    document.getElementById('userName').textContent = currentUser.username;
+                    
+                    // Show main content
+                    document.querySelector('.container').style.display = 'block';
+                    
+                    // Load initial data
+                    await updateStatistics();
+                    loadDrivers();
+                    
+                    // Start realtime updates
+                    startRealtimeUpdates();
+                } else {
+                    errorDiv.textContent = response.error || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Login error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                await apiClient.logout();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            
+            // Reset state
+            isAuthenticated = false;
+            currentUser = null;
+            apiClient.setAuthToken(null);
+            
+            // Show login form, hide user info
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+            
+            // Hide main content
+            document.querySelector('.container').style.display = 'none';
+            
+            // Stop realtime updates
+            stopRealtimeUpdates();
+            
+            // Clear form
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if already authenticated (from localStorage)
+            const savedToken = localStorage.getItem('adminToken');
+            if (savedToken) {
+                apiClient.setAuthToken(savedToken);
+                // Test if token is still valid
+                try {
+                    const response = await apiClient.getSystemStatus();
+                    if (response.success) {
+                        isAuthenticated = true;
+                        document.getElementById('authSection').style.display = 'none';
+                        document.getElementById('userInfo').style.display = 'block';
+                        document.getElementById('userName').textContent = 'Admin';
+                        document.querySelector('.container').style.display = 'block';
+                        
+                        // Load initial data
+                        await updateStatistics();
+                        loadDrivers();
+                        
+                        // Start realtime updates
+                        startRealtimeUpdates();
+                        return;
+                    }
+                } catch (error) {
+                    // Token invalid, continue to login
+                }
+            }
+            
+            // Show login form
+            document.getElementById('authSection').style.display = 'block';
+            document.querySelector('.container').style.display = 'none';
+        });
+
+        // Realtime updates
+        let realtimeInterval = null;
+        
+        function startRealtimeUpdates() {
+            if (realtimeInterval) return;
+            
+            realtimeInterval = setInterval(async () => {
+                if (isAuthenticated) {
+                    try {
+                        // Trigger manual updates for all data types
+                        await apiClient.triggerUpdate('drivers');
+                        await apiClient.triggerUpdate('receipts');
+                        await apiClient.triggerUpdate('queue');
+                        await apiClient.triggerUpdate('statistics');
+                        await apiClient.triggerUpdate('system');
+                    } catch (error) {
+                        console.error('Realtime update error:', error);
+                    }
+                }
+            }, 10000); // Update every 10 seconds
+        }
+        
+        function stopRealtimeUpdates() {
+            if (realtimeInterval) {
+                clearInterval(realtimeInterval);
+                realtimeInterval = null;
+            }
+        }
+        
+        // Auto-refresh every 30 seconds (fallback)
+        setInterval(refreshData, 30000);
+    </script>
+</body>
+</html>

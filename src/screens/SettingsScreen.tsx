@@ -1,11 +1,13 @@
 // src/screens/SettingsScreen.tsx
 
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Text, IconButton, ActivityIndicator } from 'react-native-paper';
 import { useAppStore } from '../store/useAppStore';             // for logout
 import { useOfflineTxStore } from '../store/offlineTxStore';
 import { testOfflineSystem, cleanupTestData } from '../lib/testOfflineSystem';
+import { apiServer } from '../lib/apiServer';
 import {
   useAppKit,
   useAppKitState,
@@ -17,6 +19,7 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 
 export default function SettingsScreen() {
   const [isTesting, setIsTesting] = useState(false);
+  const [isStartingServer, setIsStartingServer] = useState(false);
   
   // AppKit hooks
   const { open, close }   = useAppKit();
@@ -64,6 +67,18 @@ export default function SettingsScreen() {
       Alert.alert('Cleanup Complete', 'Test data has been removed');
     } catch (error) {
       Alert.alert('Cleanup Error', `Failed to cleanup: ${error}`);
+    }
+  };
+
+  const handleStartApiServer = async () => {
+    setIsStartingServer(true);
+    try {
+      await apiServer.start();
+      Alert.alert('API Server Started', 'Admin dashboard can now connect to the mobile app');
+    } catch (error) {
+      Alert.alert('Server Error', `Failed to start API server: ${error}`);
+    } finally {
+      setIsStartingServer(false);
     }
   };
 
@@ -127,6 +142,25 @@ export default function SettingsScreen() {
           <Text style={styles.rowTitle}>Cleanup Test Data</Text>
           <Text style={styles.rowSub}>Remove test transactions</Text>
         </View>
+      </TouchableOpacity>
+
+      {/* Receipts row */}
+      <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Receipts')}>
+        <IconButton icon="receipt" size={20} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowTitle}>Receipts</Text>
+          <Text style={styles.rowSub}>View payment receipts and history</Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* API Server row */}
+      <TouchableOpacity style={styles.row} onPress={handleStartApiServer}>
+        <IconButton icon="server" size={20} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.rowTitle}>Start API Server</Text>
+          <Text style={styles.rowSub}>Enable admin dashboard connection</Text>
+        </View>
+        {isStartingServer && <ActivityIndicator />}
       </TouchableOpacity>
 
       {/* Log-out button */}
