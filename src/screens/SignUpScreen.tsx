@@ -13,6 +13,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useAppStore } from '../store/useAppStore';
 
+/* ------------------------------------------------------------------ */
+/* Email validation helper                                            */
+/* ------------------------------------------------------------------ */
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
 type Nav = NativeStackNavigationProp<RootStackParamList, 'SignUp'>;
 
 export default function SignUpScreen() {
@@ -24,10 +32,14 @@ export default function SignUpScreen() {
   const [email,    setEmail]    = useState('');
   const [phone,    setPhone]    = useState('');
   const [password, setPassword] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const emailValid = isValidEmail(email);
+  const showEmailError = emailTouched && email.trim() !== '' && !emailValid;
 
   const allFilled = 
     name.trim() !== '' &&
-    email.trim() !== '' &&
+    emailValid &&
     phone.trim() !== '' &&
     password.trim() !== '';
 
@@ -61,8 +73,15 @@ export default function SignUpScreen() {
         autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
+        onBlur={() => setEmailTouched(true)}
+        style={[
+          styles.input,
+          showEmailError && styles.inputError,
+        ]}
       />
+      {showEmailError && (
+        <Text style={styles.errorText}>Please enter a valid email address</Text>
+      )}
       <RNTextInput
         placeholder="Phone"
         placeholderTextColor="#666"
@@ -124,6 +143,16 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     fontSize: 15,
     color: '#000',
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+    marginBottom: 4,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginBottom: 12,
   },
   primaryBtn: {
     borderRadius: 28,

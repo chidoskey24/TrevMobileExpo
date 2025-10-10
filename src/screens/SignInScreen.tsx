@@ -14,6 +14,14 @@ import type { RootStackParamList } from '../navigation/RootNavigator';
 import { useAppStore } from '../store/useAppStore';
 
 /* ------------------------------------------------------------------ */
+/* Email validation helper                                            */
+/* ------------------------------------------------------------------ */
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
+/* ------------------------------------------------------------------ */
 /* Types & hooks                                                      */
 /* ------------------------------------------------------------------ */
 type Nav = NativeStackNavigationProp<RootStackParamList, 'SignIn'>;
@@ -24,12 +32,19 @@ export default function SignInScreen() {
   /* local input state ------------------------------------------------ */
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
 
   /* store ------------------------------------------------------------ */
   const setUser = useAppStore(s => s.setUser);
 
+  /* validation ------------------------------------------------------- */
+  const emailValid = isValidEmail(email);
+  const showEmailError = emailTouched && email.trim() !== '' && !emailValid;
+  const canSubmit = emailValid && password.trim() !== '';
+
   /* handlers --------------------------------------------------------- */
   const handleNext = () => {
+    if (!canSubmit) return;
     // TODO: validate credentials, call backend, etc.
     // For now we persist a dummy user and land in the dashboard.
     setUser({
@@ -57,8 +72,15 @@ export default function SignInScreen() {
         autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
-        style={styles.input}
+        onBlur={() => setEmailTouched(true)}
+        style={[
+          styles.input,
+          showEmailError && styles.inputError,
+        ]}
       />
+      {showEmailError && (
+        <Text style={styles.errorText}>Please enter a valid email address</Text>
+      )}
 
       {/* Password ------------------------------------------------------ */}
       <RNTextInput
@@ -82,11 +104,11 @@ export default function SignInScreen() {
         contentStyle={{ height: 50 }}
         style={[
           styles.primaryBtn,
-          (!email.trim() || !password.trim()) && { opacity: 0.4 },
+          !canSubmit && { opacity: 0.4 },
         ]}
         labelStyle={styles.primaryLabel}
         onPress={handleNext}
-        disabled={!email.trim() || !password.trim()}
+        disabled={!canSubmit}
       >
         Next
       </Button>
@@ -127,6 +149,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 15,
     color: '#000',
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
   },
   forgotWrap: {
     alignItems: 'flex-end',

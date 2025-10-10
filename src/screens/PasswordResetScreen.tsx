@@ -1,16 +1,32 @@
 // src/screens/PasswordResetScreen.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, TextInput as RNTextInput, Button } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { AuthStackParamList } from '../navigation/RootNavigator';
 
+/* ------------------------------------------------------------------ */
+/* Email validation helper                                            */
+/* ------------------------------------------------------------------ */
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+};
+
 export default function PasswordResetScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
 
+  const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const emailValid = isValidEmail(email);
+  const showEmailError = emailTouched && email.trim() !== '' && !emailValid;
+  const canSubmit = emailValid;
+
   const handleSend = () => {
+    if (!canSubmit) return;
     /* TODO: wire to backend → then maybe navigate back or show toast */
     navigation.goBack();
   };
@@ -32,17 +48,30 @@ export default function PasswordResetScreen() {
         autoComplete="email"
         autoCorrect={false}
         autoFocus
+        value={email}
+        onChangeText={setEmail}
+        onBlur={() => setEmailTouched(true)}
         textColor="#000"
         selectionColor="#000"
         underlineColor="transparent"         // hide inactive underline
         activeUnderlineColor="transparent"   // hide active underline
-        style={styles.input}
+        style={[
+          styles.input,
+          showEmailError && styles.inputError,
+        ]}
       />
+      {showEmailError && (
+        <Text style={styles.errorText}>Please enter a valid email address</Text>
+      )}
 
       <Button
         mode="contained"
         onPress={handleSend}
-        style={styles.primaryBtn}
+        disabled={!canSubmit}
+        style={[
+          styles.primaryBtn,
+          !canSubmit && { opacity: 0.4 },
+        ]}
         contentStyle={styles.btnContent}
         labelStyle={styles.primaryLabel}
       >
@@ -80,8 +109,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 15,
     color: '#000',
-    marginBottom: 24,
-    // borderWidth: 0 is fine, but Paper’s flat mode already removes borders
+    marginBottom: 8,
+    // borderWidth: 0 is fine, but Paper's flat mode already removes borders
+  },
+  inputError: {
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 12,
+    marginBottom: 16,
   },
   primaryBtn: {
     borderRadius: 32,
