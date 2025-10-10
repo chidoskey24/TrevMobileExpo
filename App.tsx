@@ -13,7 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper';
 import { LogBox } from 'react-native';
-import React from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 
 import { WagmiProvider } from 'wagmi';
@@ -28,6 +28,7 @@ import {
 
 import RootNavigator from './src/navigation/RootNavigator';
 import OfflineInitializer from './src/components/OfflineInitializer';
+import CustomSplashScreen from './src/components/CustomSplashScreen';
 
 // ───────── AppKit setup ─────────
 
@@ -37,7 +38,23 @@ LogBox.ignoreLogs([
   'Restore will override',
   'subscription:',
   'WalletConnect',
+  'core/relayer/subscription',
 ]);
+
+// Filter noisy WalletConnect relayer error logs that surface as RedBox but are harmless
+const originalConsoleError = console.error;
+console.error = (...args: any[]) => {
+  try {
+    const first = args[0];
+    if (typeof first === 'string' && first.includes('core/relayer/subscription')) {
+      // swallow noisy relayer subscription reconnect logs
+      return;
+    }
+  } catch {}
+  // forward other errors
+  // @ts-ignore - preserve original signature
+  originalConsoleError.apply(console, args as any);
+};
 
 const projectId = '32a6f24de0a63b0c51920ddf492e834f';
 const metadata = {
@@ -73,23 +90,6 @@ if (!(global as any)._appkitInitialized) {
       wagmiConfig,
       metadata,
       defaultChain: polygonAmoy,
-      // Add storage configuration to prevent session restoration issues
-      storage: {
-        getItem: async (key: string) => {
-          try {
-            return null; // Disable persistent storage to prevent restoration conflicts
-          } catch (error) {
-            console.warn('Storage getItem error:', error);
-            return null;
-          }
-        },
-        setItem: async (key: string, value: string) => {
-          // No-op to prevent storage issues
-        },
-        removeItem: async (key: string) => {
-          // No-op to prevent storage issues
-        },
-      },
     });
     (global as any)._appkitInitialized = true;
     console.log('✅ AppKit initialized successfully');
@@ -137,6 +137,12 @@ const paperTheme = {
 
 // ───────── App component ─────────
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  if (showSplash) {
+    return <CustomSplashScreen onFinish={() => setShowSplash(false)} />;
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

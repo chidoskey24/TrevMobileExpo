@@ -8,27 +8,47 @@ import {
   TouchableOpacity,
   Alert,
   RefreshControl,
+  Modal,
+  Dimensions,
 } from 'react-native';
+import ViewShot from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useReceiptStore } from '../store/receiptStore';
 import { receiptService } from '../lib/receiptService';
 import { ReceiptRecord } from '../lib/database';
 
+type Props = NativeStackScreenProps<RootStackParamList, 'Receipts'>;
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Receipts'>;
 
-export default function ReceiptsScreen() {
+const { width: screenWidth } = Dimensions.get('window');
+
+export default function ReceiptsScreen({ route }: Props) {
   const navigation = useNavigation<Nav>();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'paid' | 'queued' | 'failed'>('all');
+  const [selectedReceipt, setSelectedReceipt] = useState<ReceiptRecord | null>(null);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const viewShotRef = React.useRef<ViewShot>(null);
   
   const { receipts, isLoading, refreshReceipts } = useReceiptStore();
 
   useEffect(() => {
     refreshReceipts();
   }, []);
+  
+  // Handle opening receipt from navigation params
+  useEffect(() => {
+    if (route.params?.receiptId) {
+      const receipt = receipts.find(r => r.id === route.params.receiptId);
+      if (receipt) {
+        handleViewReceipt(receipt);
+      }
+    }
+  }, [route.params?.receiptId, receipts]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -58,41 +78,46 @@ export default function ReceiptsScreen() {
     selectedStatus === 'all' || receipt.status === selectedStatus
   );
 
-  const handleViewReceipt = async (receipt: ReceiptRecord) => {
+  const handleViewReceipt = (receipt: ReceiptRecord) => {
+    setSelectedReceipt(receipt);
+    setShowReceiptModal(true);
+  };
+
+  const handleShareReceipt = async () => {
+    if (!selectedReceipt || !viewShotRef.current) return;
+
     try {
-      const pdfContent = await receiptService.generateReceiptPDF(receipt.id);
-      Alert.alert(
-        'Receipt Details',
-        `Receipt ID: ${receipt.id}\nDriver: ${receipt.driverName}\nAmount: ${receipt.amount} ${receipt.currency}\nStatus: ${receipt.status}\n\n${pdfContent}`,
-        [{ text: 'OK' }]
-      );
+      const ref = viewShotRef.current;
+      if (!ref) return;
+      const uri = await (ref as any).capture();
+      if (!uri) return;
+      
+      console.log('Captured image URI:', uri);
+      
+      // Check if sharing is available on this device
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Error', 'Sharing is not available on this device');
+        return;
+      }
+      
+      // Share the image using expo-sharing
+      await Sharing.shareAsync(uri, {
+        mimeType: 'image/jpeg',
+        dialogTitle: `Receipt #${selectedReceipt.id.slice(-8)} - ₦${selectedReceipt.amount.toLocaleString()}`,
+        UTI: 'public.jpeg',
+      });
     } catch (error) {
-      Alert.alert('Error', 'Failed to load receipt details');
+      console.error('Error sharing receipt:', error);
+      Alert.alert('Error', 'Failed to share receipt');
     }
   };
 
-  const handleDeleteReceipt = (receiptId: string) => {
-    Alert.alert(
-      'Delete Receipt',
-      'Are you sure you want to delete this receipt?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const receiptStore = useReceiptStore.getState();
-              await receiptStore.deleteReceipt(receiptId);
-              Alert.alert('Success', 'Receipt deleted');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete receipt');
-            }
-          }
-        }
-      ]
-    );
+  const closeReceiptModal = () => {
+    setShowReceiptModal(false);
+    setSelectedReceipt(null);
   };
+
 
   const getStatistics = () => {
     const total = receipts.length;
@@ -205,13 +230,6 @@ export default function ReceiptsScreen() {
               >
                 <Text style={styles.actionButtonText}>View</Text>
               </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.actionButton, styles.deleteButton]}
-                onPress={() => handleDeleteReceipt(receipt.id)}
-              >
-                <Text style={styles.actionButtonText}>Delete</Text>
-              </TouchableOpacity>
             </View>
           </View>
         ))}
@@ -228,6 +246,102 @@ export default function ReceiptsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Full-Screen Receipt Modal */}
+      <Modal
+        visible={showReceiptModal}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={closeReceiptModal}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          {selectedReceipt && (
+            <>
+              {/* Modal Header */}
+              <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={closeReceiptModal} style={styles.closeButton}>
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
+                <Text style={styles.modalTitle}>Receipt Details</Text>
+                <TouchableOpacity onPress={handleShareReceipt} style={styles.shareButton}>
+                  <Text style={styles.shareButtonText}>📤</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Receipt Content */}
+              <ScrollView style={styles.modalContent}>
+                <ViewShot ref={viewShotRef} options={{ format: "jpg", quality: 0.9 }}>
+                  <View style={styles.receiptContainer}>
+                    {/* Receipt Header */}
+                    <View style={styles.receiptHeaderSection}>
+                      <Text style={styles.receiptTitle}>TrevMobile</Text>
+                      <Text style={styles.receiptSubtitle}>Payment Receipt</Text>
+                    </View>
+
+                    {/* Receipt Content */}
+                    <View style={styles.receiptContentSection}>
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Receipt ID:</Text>
+                        <Text style={styles.receiptValue}>#{selectedReceipt.id.slice(-8)}</Text>
+                      </View>
+                      
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Date:</Text>
+                        <Text style={styles.receiptValue}>
+                          {new Date(selectedReceipt.createdAt).toLocaleDateString()} at{' '}
+                          {new Date(selectedReceipt.createdAt).toLocaleTimeString()}
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Driver:</Text>
+                        <Text style={styles.receiptValue}>{selectedReceipt.driverName}</Text>
+                      </View>
+                      
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Amount:</Text>
+                        <Text style={[styles.receiptValue, styles.amountValue]}>
+                          ₦{selectedReceipt.amount.toLocaleString()}
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Payment Method:</Text>
+                        <Text style={styles.receiptValue}>{selectedReceipt.paymentMethod}</Text>
+                      </View>
+                      
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Status:</Text>
+                        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(selectedReceipt.status) }]}>
+                          <Text style={styles.statusIcon}>{getStatusIcon(selectedReceipt.status)}</Text>
+                          <Text style={styles.statusText}>{selectedReceipt.status.toUpperCase()}</Text>
+                        </View>
+                      </View>
+
+                      {selectedReceipt.transactionHash && (
+                        <View style={[styles.receiptRow, { marginBottom: -130 }]}>
+                          <Text style={styles.receiptLabel}>Transaction Hash:</Text>
+                          <Text style={styles.hashValue}>{selectedReceipt.transactionHash}</Text>
+                        </View>
+                      )}
+
+                      <View style={styles.receiptRow}>
+                        <Text style={styles.receiptLabel}>Trip Details:</Text>
+                        <Text style={styles.receiptValue}>From: Scan Location{'\n'}To: Payment Destination</Text>
+                      </View>
+                    </View>
+
+                    {/* Receipt Footer */}
+                    <View style={styles.receiptFooter}>
+                      <Text style={styles.thankYouText}>Thank you for using TrevMobile!</Text>
+                    </View>
+                  </View>
+                </ViewShot>
+              </ScrollView>
+            </>
+          )}
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -335,14 +449,16 @@ const styles = StyleSheet.create({
   },
   receiptCard: {
     backgroundColor: 'white',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   receiptHeader: {
     flexDirection: 'row',
@@ -430,9 +546,6 @@ const styles = StyleSheet.create({
   viewButton: {
     backgroundColor: '#007AFF',
   },
-  deleteButton: {
-    backgroundColor: '#F44336',
-  },
   actionButtonText: {
     fontSize: 12,
     fontWeight: '600',
@@ -452,5 +565,123 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
     textAlign: 'center',
+  },
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: '600',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+  },
+  shareButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#007AFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shareButtonText: {
+    fontSize: 18,
+  },
+  modalContent: {
+    flex: 1,
+    padding: 20,
+  },
+  receiptContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+    marginBottom: 20,
+  },
+  receiptHeaderSection: {
+    alignItems: 'center',
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: '#007AFF',
+  },
+  receiptTitle: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#000',
+    marginBottom: 4,
+    letterSpacing: -0.5,
+  },
+  receiptSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  receiptContentSection: {
+    marginBottom: 20,
+  },
+  receiptRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16 ,
+    paddingVertical: 4,
+  },
+  receiptLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    flex: 1,
+  },
+  receiptValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+    flex: 2,
+    textAlign: 'right',
+  },
+  amountValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#007AFF',
+  },
+  receiptFooter: {
+    alignItems: 'center',
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  thankYouText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+    fontStyle: 'italic',
   },
 });

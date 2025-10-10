@@ -1,15 +1,16 @@
 // src/components/TransactionItem.tsx
 import React from 'react'
-import { View, StyleSheet } from 'react-native'
+import { View, StyleSheet, TouchableOpacity } from 'react-native'
 import { Text, useTheme } from 'react-native-paper'
 import { Feather } from '@expo/vector-icons';
 
 interface Props {
   type: 'deposit' | 'withdraw'
-  title: string       // e.g. “Sent to wallet”
-  subtitle: string    // e.g. “0.75 POL”
+  title: string       // e.g. "Sent to wallet"
+  subtitle: string    // e.g. "0.75 POL"
   amount: number      // +200 or –150
-  currency?: string   // default “₦”
+  currency?: string   // default "₦"
+  onPress?: () => void // Optional press handler
 }
 
 export default function TransactionItem({
@@ -18,6 +19,7 @@ export default function TransactionItem({
   subtitle,
   amount,
   currency = '₦',
+  onPress,
 }: Props) {
   const theme = useTheme()
   const isDeposit = type === 'deposit'
@@ -31,8 +33,10 @@ export default function TransactionItem({
     maximumFractionDigits: 2,
   }).format(Math.abs(amount))
 
+  const Wrapper = onPress ? TouchableOpacity : View;
+
   return (
-    <View style={styles.row}>
+    <Wrapper style={styles.row} onPress={onPress} activeOpacity={0.7}>
       <Feather
         name={iconName}
         size={24}
@@ -57,7 +61,7 @@ export default function TransactionItem({
         {currency}
         {formatted}
       </Text>
-    </View>
+    </Wrapper>
   )
 }
 

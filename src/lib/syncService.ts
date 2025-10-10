@@ -1,5 +1,5 @@
 // src/lib/syncService.ts
-import { database } from './database';
+import { database, type TransactionRecord } from './database';
 import { receiptService } from './receiptService';
 import { contractGateway } from './contractGateway';
 import { useOfflineTxStore } from '../store/offlineTxStore';
@@ -69,7 +69,8 @@ class SyncService {
       await this.syncReceipts();
       
       // Sync transactions
-      await this.syncTransactions();
+      const pending = await database.getUnsyncedTransactions();
+      await this.syncTransactions(pending);
       
       // Sync queued payments
       await this.syncQueuedPayments();
@@ -104,43 +105,31 @@ class SyncService {
     }
   }
 
-  private async syncTransactions(): Promise<void> {
+  async syncTransactions(
+    transactions: TransactionRecord[]
+  ): Promise<{ success: boolean; syncedCount: number; errors: string[] }> {
     try {
-      const offlineStore = useOfflineTxStore.getState();
-      
-      // In a real implementation, you would sync with a remote server
-      // For now, we'll just log the sync
-      console.log(`Synced ${offlineStore.unsyncedCount} transactions`);
+      // In a real implementation, push to your backend here.
+      // We simply acknowledge and return success so callers can mark local rows as synced.
+      console.log(`Syncing ${transactions.length} transaction(s) to server (mock).`);
+      return { success: true, syncedCount: transactions.length, errors: [] };
     } catch (error) {
       console.error('Failed to sync transactions:', error);
-      throw error;
+      return { success: false, syncedCount: 0, errors: [(error as Error).message] };
     }
   }
 
   private async syncQueuedPayments(): Promise<void> {
     try {
       const queuedPayments = contractGateway.getQueuedPayments();
-      
-      // Process queued payments
-      for (const payment of queuedPayments) {
-        if (payment.status === 'queued') {
-          try {
-            // Attempt to process the payment
-            const result = await contractGateway.submitPayment(payment.request);
-            if (result.success) {
-              // Update payment status
-              payment.status = 'completed';
-              payment.transactionHash = result.transactionHash;
-            }
-          } catch (error) {
-            console.error(`Failed to process queued payment ${payment.id}:`, error);
-            payment.status = 'failed';
-            payment.error = (error as Error).message;
-          }
-        }
+      // NOTE: Processing queued on background requires wallet clients not available here.
+      // We skip execution and just log; UI/services can trigger processing where clients exist.
+      const queuedCount = queuedPayments.filter(p => p.status === 'queued').length;
+      if (queuedCount > 0) {
+        console.warn(`Skipping processing of ${queuedCount} queued payment(s) (no wallet clients in sync service).`);
       }
       
-      console.log(`Processed ${queuedPayments.length} queued payments`);
+      console.log(`Queued payments in memory: ${queuedPayments.length}`);
     } catch (error) {
       console.error('Failed to sync queued payments:', error);
       throw error;

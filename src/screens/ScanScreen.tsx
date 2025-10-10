@@ -100,7 +100,7 @@ export default function ScanScreen() {
         },
       };
 
-      const result = await contractGateway.submitPayment(paymentRequest);
+      const result = await contractGateway.submitPayment(paymentRequest, publicClient, walletClient);
       
       if (!result.success) {
         throw new Error(result.error || 'Payment failed');
@@ -284,6 +284,10 @@ export default function ScanScreen() {
         </View>
       </View>
 
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Scan QR code</Text>
+      </View>
+
       {/* Payment Confirmation Modal */}
       <Modal
         visible={showConfirmation}
@@ -437,6 +441,21 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingTop: 48,
+    paddingBottom: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    alignItems: 'center',
+  },
+  headerText: {
+    color: '#fff',
+    fontSize: 18,
     fontWeight: '600',
   },
 });

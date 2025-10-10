@@ -38,7 +38,7 @@ export type AppStackParamList = {
   Notifications: undefined;
   Profile   : undefined;
   Transactions: undefined;
-  Receipts: undefined;
+  Receipts: { receiptId?: string };
 };
 
 /* merge for typing */

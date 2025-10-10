@@ -144,15 +144,6 @@ export default function SettingsScreen() {
         </View>
       </TouchableOpacity>
 
-      {/* Receipts row */}
-      <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('Receipts')}>
-        <IconButton icon="receipt" size={20} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.rowTitle}>Receipts</Text>
-          <Text style={styles.rowSub}>View payment receipts and history</Text>
-        </View>
-      </TouchableOpacity>
-
       {/* API Server row */}
       <TouchableOpacity style={styles.row} onPress={handleStartApiServer}>
         <IconButton icon="server" size={20} />

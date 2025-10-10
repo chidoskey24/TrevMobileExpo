@@ -15,7 +15,10 @@ export default function OnboardingScreen({ navigation }: Props) {
 
       {/* middle content */}
       <View style={styles.centerBlock}>
-        <Text style={styles.welcome}>👋 Welcome to TrevMobile</Text>
+        <Text style={styles.emoji}>👋</Text>
+        <Text style={styles.welcome}>Welcome to</Text>
+        <Text style={styles.appName}>TrevMobile</Text>
+        <Text style={styles.subtitle}>Your gateway to seamless blockchain payments</Text>
       </View>
 
       {/* bottom button */}
@@ -41,13 +44,39 @@ const styles = StyleSheet.create({
   },
   centerBlock: {
     alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emoji: {
+    fontSize: 48,
+    marginBottom: 16,
   },
   welcome: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 24,
-    color: '#111',
+    fontSize: 24,
+    fontWeight: '300',
+    color: '#666',
     textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  appName: {
+    fontSize: 42,
+    fontWeight: '800',
+    color: '#000',
+    textAlign: 'center',
+    marginBottom: 16,
+    letterSpacing: -1,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#888',
+    textAlign: 'center',
+    lineHeight: 22,
+    letterSpacing: 0.3,
+    maxWidth: 280,
   },
   cta: {
     alignSelf: 'stretch',   // makes the button fill the width

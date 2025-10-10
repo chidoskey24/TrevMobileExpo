@@ -1,6 +1,6 @@
 // ─── src/screens/DashboardScreen.tsx ─────────────────────────────
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderCard from '../components/HeaderCard';
 import { useAppStore } from '../store/useAppStore';
@@ -14,6 +14,8 @@ import { polygonAmoy } from '@wagmi/core/chains';
 import { useTxStore } from '../store/txStore';
 import SyncStatus from '../components/SyncStatus';
 import StatusFeedback from '../components/StatusFeedback';
+import { useReceiptStore } from '../store/receiptStore';
+import { Feather } from '@expo/vector-icons';
 
 export default function DashboardScreen() {
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -52,8 +54,22 @@ export default function DashboardScreen() {
 
     /* ───────────────── transaction data ───────────── */
     const allTxData = useTxStore(s=>s.txs);
-    const txData = allTxData.slice(0, 4); // Show only first 4 transactions
-    const hasMoreTransactions = allTxData.length > 4;
+    const txData = allTxData.slice(0, 3); // Show only first 3 transactions
+    const hasMoreTransactions = allTxData.length > 3;
+    
+    const { receipts } = useReceiptStore();
+    
+    const handleTransactionPress = (txId: string) => {
+      // Find the receipt associated with this transaction
+      const receipt = receipts.find(r => r.transactionId === txId || r.id === txId);
+      
+      if (receipt) {
+        // Navigate to receipts screen - we'll need to pass the receipt ID
+        navigation.navigate('Receipts', { receiptId: receipt.id });
+      } else {
+        Alert.alert('No Receipt', 'No receipt found for this transaction');
+      }
+    };
 
 
   return (
@@ -81,19 +97,21 @@ export default function DashboardScreen() {
       <View style={styles.txCard}>
         <View style={styles.txHeaderContainer}>
           <Text style={styles.txHeader}>Transactions</Text>
-          {hasMoreTransactions && (
-            <TouchableOpacity 
-              style={styles.viewMoreButton}
-              onPress={() => navigation.navigate('Transactions')}
-            >
-              <Text style={styles.viewMoreText}>View More</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity 
+            style={styles.historyButton}
+            onPress={() => navigation.navigate('Receipts', {})}
+          >
+            <Feather name="clock" size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
 
         {txData.length > 0 ? (
           txData.map(tx => (
-            <TransactionItem key={tx.id} {...tx} />
+            <TransactionItem 
+              key={tx.id} 
+              {...tx} 
+              onPress={() => handleTransactionPress(tx.id)}
+            />
           ))
         ) : (
           <View style={styles.emptyTxContainer}>
@@ -142,6 +160,7 @@ txCard: {
   shadowColor: '#000',
   shadowOpacity: 0.05,
   shadowRadius: 8,
+  overflow: 'hidden',
 },
 txHeaderContainer: {
   flexDirection: 'row',
@@ -155,16 +174,13 @@ txHeader: {
   fontSize: 17,
   fontWeight: '700',
 },
-viewMoreButton: {
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  borderRadius: 12,
-  backgroundColor: '#F0F0F0',
-},
-viewMoreText: {
-  fontSize: 14,
-  fontWeight: '600',
-  color: '#2196F3',
+historyButton: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: '#000',
+  justifyContent: 'center',
+  alignItems: 'center',
 },
 emptyTxContainer: {
   paddingHorizontal: 18,
